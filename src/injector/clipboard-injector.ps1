@@ -1,10 +1,10 @@
-# clipboard-injector.ps1 - Win32 Clipboard Injection & Smart Reset Focus Engine
+# clipboard-injector.ps1 - Win32 Clipboard Injection & Focus Engine
 param (
     [string]$TargetTitle = "Antigravity IDE",
     [string]$ProcessName = "Antigravity IDE",
     [string]$FocusShortcut = "Auto",
-    [int]$FocusDelayMs = 500,
-    [int]$PasteDelayMs = 250,
+    [int]$FocusDelayMs = 300,
+    [int]$PasteDelayMs = 200,
     [bool]$SubmitEnter = $true,
     [bool]$NewChat = $false,
     [string]$Method = "keybd_event"
@@ -65,8 +65,6 @@ public class Win32ClipboardInjector {
     public const byte VK_ALT = 0x12;
     public const byte VK_V = 0x56;
     public const byte VK_L = 0x4C;
-    public const byte VK_I = 0x49;
-    public const byte VK_P = 0x50;
     public const byte VK_RETURN = 0x0D;
 
     public const uint KEYEVENTF_KEYUP = 0x0002;
@@ -88,50 +86,54 @@ public class Win32ClipboardInjector {
 
     public static void SendCtrlL() {
         SendKeybd(VK_CONTROL, false);
-        Thread.Sleep(30);
+        Thread.Sleep(50);
         SendKeybd(VK_L, false);
-        Thread.Sleep(40);
+        Thread.Sleep(50);
         SendKeybd(VK_L, true);
-        Thread.Sleep(30);
+        Thread.Sleep(50);
         SendKeybd(VK_CONTROL, true);
+        Thread.Sleep(50);
     }
 
     public static void SendCtrlShiftL() {
         SendKeybd(VK_CONTROL, false);
         SendKeybd(VK_SHIFT, false);
-        Thread.Sleep(30);
+        Thread.Sleep(50);
         SendKeybd(VK_L, false);
-        Thread.Sleep(40);
+        Thread.Sleep(50);
         SendKeybd(VK_L, true);
-        Thread.Sleep(30);
+        Thread.Sleep(50);
         SendKeybd(VK_SHIFT, true);
         SendKeybd(VK_CONTROL, true);
+        Thread.Sleep(50);
     }
 
     public static void SendPasteKeybdEvent() {
         SendKeybd(VK_CONTROL, false);
-        Thread.Sleep(40);
+        Thread.Sleep(60);
         SendKeybd(VK_V, false);
-        Thread.Sleep(40);
+        Thread.Sleep(60);
         SendKeybd(VK_V, true);
-        Thread.Sleep(40);
+        Thread.Sleep(60);
         SendKeybd(VK_CONTROL, true);
+        Thread.Sleep(60);
     }
 
     public static void SendEnterKeybdEvent() {
         SendKeybd(VK_RETURN, false);
-        Thread.Sleep(50);
+        Thread.Sleep(80);
         SendKeybd(VK_RETURN, true);
+        Thread.Sleep(50);
     }
 
     public static void FocusChatViaSmartResetSequence() {
-        // 1. Send Ctrl+L (Closes/toggles focus away from any code editor or panel)
+        // 1. Reset focus away from any code document
+        SendCtrlL();
+        Thread.Sleep(200);
+
+        // 2. Open chat panel & lock input cursor inside text box
         SendCtrlL();
         Thread.Sleep(300);
-
-        // 2. Send Ctrl+L again (Re-opens & forces focus directly into Chat input bar)
-        SendCtrlL();
-        Thread.Sleep(550); // Robust 550ms delay to allow Electron panel animation & focus lock
     }
 
     public static InjectResult Inject(string targetTitle, string targetProcName, string focusShortcut, int focusDelayMs, int pasteDelayMs, bool submitEnter, bool newChat) {
@@ -236,13 +238,13 @@ public class Win32ClipboardInjector {
 
         if (newChat) {
             SendCtrlShiftL();
-            Thread.Sleep(400);
+            Thread.Sleep(300);
         }
 
-        // Execute Guaranteed Smart Reset Focus Sequence on EVERY prompt
+        // Run guaranteed reset sequence to focus chat
         FocusChatViaSmartResetSequence();
 
-        // Paste text from clipboard
+        // Paste from clipboard
         SendPasteKeybdEvent();
         Thread.Sleep(pasteDelayMs);
 
