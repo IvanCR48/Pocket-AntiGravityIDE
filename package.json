@@ -1,0 +1,21 @@
+{
+  "name": "pocket-antigravity",
+  "version": "1.0.0",
+  "description": "Remote control and monitoring companion for Antigravity IDE",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "app": "start.bat",
+    "stop": "stop.bat",
+    "test:window": "node scripts/test-window-finder.js",
+    "test:text": "node scripts/test-inject-text.js",
+    "test:image": "node scripts/test-inject-image.js",
+    "tunnel": "node scripts/start-tunnel.js"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "ws": "^8.18.0"
+  }
+}
