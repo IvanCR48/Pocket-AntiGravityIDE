@@ -5,11 +5,10 @@ class PromptQueue {
   constructor() {
     this.queue = [];
     this.isProcessing = false;
-    this.isAgentBusy = false;
   }
 
   /**
-   * Adds a prompt task to the queue and triggers processing if idle.
+   * Adds a prompt task to the queue and triggers processing.
    * @param {Object} item
    * @returns {Promise<Object>}
    */
@@ -21,20 +20,14 @@ class PromptQueue {
   }
 
   /**
-   * Updates agent busy state (e.g. from TranscriptWatcher log activity).
-   * @param {boolean} busy
+   * Legacy helper kept for compatibility.
    */
   setAgentBusy(busy) {
-    const wasBusy = this.isAgentBusy;
-    this.isAgentBusy = busy;
-    if (wasBusy && !busy) {
-      // Agent finished writing, process next queued prompt if any
-      setTimeout(() => this.checkAndProcess(), 300);
-    }
+    // Non-blocking
   }
 
   async checkAndProcess() {
-    if (this.isProcessing || this.isAgentBusy || this.queue.length === 0) {
+    if (this.isProcessing || this.queue.length === 0) {
       return;
     }
 
@@ -42,7 +35,7 @@ class PromptQueue {
     const { item, resolve } = this.queue.shift();
 
     try {
-      console.log(`[PromptQueue] Injecting prompt (Pending: ${this.queue.length})...`);
+      console.log(`[PromptQueue] Injecting prompt (Remaining in queue: ${this.queue.length})...`);
       let result;
       if (item.uploadedImage || item.filePath) {
         result = await injectMedia({
@@ -76,7 +69,7 @@ class PromptQueue {
     } finally {
       this.isProcessing = false;
       if (this.queue.length > 0) {
-        setTimeout(() => this.checkAndProcess(), 400);
+        setTimeout(() => this.checkAndProcess(), 300);
       }
     }
   }
