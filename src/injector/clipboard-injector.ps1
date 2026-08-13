@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Forms;
 
 public class Win32ClipboardInjector {
     [DllImport("user32.dll")]
@@ -65,6 +66,8 @@ public class Win32ClipboardInjector {
     public const byte VK_ALT = 0x12;
     public const byte VK_V = 0x56;
     public const byte VK_L = 0x4C;
+    public const byte VK_I = 0x49;
+    public const byte VK_P = 0x50;
     public const byte VK_RETURN = 0x0D;
 
     public const uint KEYEVENTF_KEYUP = 0x0002;
@@ -108,6 +111,19 @@ public class Win32ClipboardInjector {
         Thread.Sleep(50);
     }
 
+    public static void SendCtrlShiftP() {
+        SendKeybd(VK_CONTROL, false);
+        SendKeybd(VK_SHIFT, false);
+        Thread.Sleep(50);
+        SendKeybd(VK_P, false);
+        Thread.Sleep(50);
+        SendKeybd(VK_P, true);
+        Thread.Sleep(50);
+        SendKeybd(VK_SHIFT, true);
+        SendKeybd(VK_CONTROL, true);
+        Thread.Sleep(50);
+    }
+
     public static void SendPasteKeybdEvent() {
         SendKeybd(VK_CONTROL, false);
         Thread.Sleep(60);
@@ -126,14 +142,19 @@ public class Win32ClipboardInjector {
         Thread.Sleep(50);
     }
 
-    public static void FocusChatViaSmartResetSequence() {
-        // 1. Reset focus away from any code document
-        SendCtrlL();
-        Thread.Sleep(200);
-
-        // 2. Open chat panel & lock input cursor inside text box
-        SendCtrlL();
-        Thread.Sleep(300);
+    public static void FocusChat(string focusShortcut) {
+        if (focusShortcut.Equals("Ctrl+L", StringComparison.OrdinalIgnoreCase)) {
+            SendCtrlL();
+            Thread.Sleep(300);
+        } else {
+            // Default "Auto": Command Palette -> "Code with Agent" -> Enter
+            SendCtrlShiftP();
+            Thread.Sleep(200);
+            SendKeys.SendWait("Code with Agent");
+            Thread.Sleep(100);
+            SendEnterKeybdEvent();
+            Thread.Sleep(350);
+        }
     }
 
     public static InjectResult Inject(string targetTitle, string targetProcName, string focusShortcut, int focusDelayMs, int pasteDelayMs, bool submitEnter, bool newChat) {
@@ -241,8 +262,8 @@ public class Win32ClipboardInjector {
             Thread.Sleep(300);
         }
 
-        // Run guaranteed reset sequence to focus chat
-        FocusChatViaSmartResetSequence();
+        // Focus Chat Panel
+        FocusChat(focusShortcut);
 
         // Paste from clipboard
         SendPasteKeybdEvent();
@@ -263,7 +284,7 @@ public class Win32ClipboardInjector {
 "@
 
 if (-not ([System.Management.Automation.PSTypeName]'Win32ClipboardInjector').Type) {
-    Add-Type -TypeDefinition $code
+    Add-Type -TypeDefinition $code -ReferencedAssemblies "System.Windows.Forms"
 }
 
 $result = [Win32ClipboardInjector]::Inject($TargetTitle, $ProcessName, $FocusShortcut, $FocusDelayMs, $PasteDelayMs, $SubmitEnter, $NewChat)
