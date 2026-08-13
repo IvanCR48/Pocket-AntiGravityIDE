@@ -1,4 +1,4 @@
-# check-chat-state.ps1 - Calibrated Chat Focus State Detector
+# check-chat-state.ps1 - Calibrated 2-Pass UIA Chat Focus Detector
 param (
     [string]$TargetTitle = "Antigravity IDE",
     [string]$ProcessName = "Antigravity IDE"
@@ -31,6 +31,9 @@ public class ChatStateDetector {
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern int GetWindowTextLength(IntPtr hWnd);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
     [DllImport("user32.dll")]
     public static extern bool IsWindowVisible(IntPtr hWnd);
@@ -88,14 +91,20 @@ public class ChatStateDetector {
                     title = sb.ToString();
                 }
 
-                bool titleMatch = !string.IsNullOrEmpty(targetTitle) &&
-                                  title.IndexOf(targetTitle, StringComparison.OrdinalIgnoreCase) >= 0;
+                StringBuilder sbClass = new StringBuilder(256);
+                GetClassName(hWnd, sbClass, 256);
+                string className = sbClass.ToString();
 
-                if (isTargetPid || titleMatch) {
+                bool isElectronWidget = className.IndexOf("Chrome_WidgetWin_1", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool titleMatch = !string.IsNullOrEmpty(targetTitle) &&
+                                  (title.IndexOf(targetTitle, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                   title.IndexOf("Antigravity", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                if ((isTargetPid || titleMatch) && isElectronWidget) {
                     if (IsWindowVisible(hWnd) || bestHwnd == IntPtr.Zero) {
                         bestHwnd = hWnd;
-                        if (IsWindowVisible(hWnd) && (titleMatch || !string.IsNullOrEmpty(title))) {
-                            return false;
+                        if (IsWindowVisible(hWnd) && titleMatch) {
+                            return false; // Found main editor window!
                         }
                     }
                 }
@@ -113,6 +122,12 @@ public class ChatStateDetector {
 
             AutomationElement root = AutomationElement.FromHandle(bestHwnd);
             if (root != null) {
+                // Pass 1: Wake up Chromium Renderer Accessibility Tree if dormant
+                try {
+                    var wakeUp = root.FindFirst(TreeScope.Children, Condition.TrueCondition);
+                } catch {}
+
+                // Pass 2: Query real edit controls
                 var condition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit);
                 AutomationElementCollection edits = root.FindAll(TreeScope.Descendants, condition);
 
