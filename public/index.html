@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pocket Antigravity</title>
+  <!-- Google Fonts: Inter & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Marked.js CDN for full Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="top-row">
+      <div class="brand">
+        <span class="brand-icon">✨</span>
+        <span class="brand-name">Pocket Antigravity</span>
+        <span class="brand-badge">IDE Remote</span>
+      </div>
+      <div class="status-group" style="display: flex; gap: 6px; align-items: center;">
+        <div id="status-badge" class="status-badge">
+          <span class="status-dot"></span> <span>Connecting...</span>
+        </div>
+        <div id="chat-state-badge" class="status-badge" title="Live IDE Chat Focus State">
+          <span class="status-dot" style="background:#a1a1aa"></span> <span>Chat: Checking...</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="controls-row">
+      <div class="tab-switcher">
+        <button id="tab-chat-btn" class="tab-btn active">💬 Chat</button>
+        <button id="tab-files-btn" class="tab-btn">📁 Workspace Files</button>
+      </div>
+
+      <button id="new-chat-btn" class="btn-new-chat" title="Create New Chat Session">➕ New Chat</button>
+
+      <select id="focus-shortcut-select" class="session-selector pill-select" title="Focus Mode">
+        <option value="Auto">Focus: Auto (Command Palette)</option>
+        <option value="Ctrl+Alt+I">Focus: Ctrl+Alt+I</option>
+        <option value="Ctrl+L">Focus: Ctrl+L</option>
+        <option value="None">Focus: Direct (None)</option>
+      </select>
+      
+      <select id="session-select" class="session-selector pill-select" title="Active Session">
+        <option>Loading sessions...</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- View 1: Chat Stream -->
+  <main id="chat-container" class="view-panel active">
+    <!-- Real-time formatted chat messages rendered here -->
+  </main>
+
+  <!-- View 2: Workspace File Explorer -->
+  <main id="files-container" class="view-panel" style="display: none;">
+    <div class="files-header">
+      <div class="explorer-title">
+        <span>📁 Workspace File Browser</span>
+        <span class="explorer-subtitle">Browse code & attach files in 1 tap</span>
+      </div>
+      <button id="refresh-files-btn" class="btn-sm">🔄 Refresh</button>
+    </div>
+    <div id="file-tree" class="file-tree">
+      <div class="loading-state">Loading workspace files...</div>
+    </div>
+  </main>
+
+  <!-- File Viewer Modal -->
+  <div id="file-viewer-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modal-file-title" class="modal-title">file.js</span>
+        <div class="modal-actions">
+          <button id="attach-file-prompt-btn" class="btn-action">📎 Attach to Prompt</button>
+          <button id="close-modal-btn" class="btn-close">✕</button>
+        </div>
+      </div>
+      <pre id="modal-file-body" class="code-body"><code>Loading file content...</code></pre>
+    </div>
+  </div>
+
+  <footer id="input-area">
+    <div id="attachment-preview" class="attachment-preview">
+      <span>📎 Attachment:</span>
+      <span id="preview-name">file.png</span>
+    </div>
+    <div class="input-row">
+      <button id="attach-btn" class="btn-icon" title="Attach Image/File">📷</button>
+      <input type="file" id="file-input" accept="image/*" style="display: none;">
+      <textarea id="prompt-input" placeholder="Type prompt for Antigravity IDE..."></textarea>
+      <button id="send-btn" class="btn-send" title="Send Prompt">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

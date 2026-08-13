@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Uploads & Temporary Scratch Files
+uploads/*
+!uploads/.gitkeep
+scratch/
+
+# System & OS Files
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment & IDE
+.env
+.vscode/
+.idea/
