@@ -165,14 +165,23 @@ public class Win32ClipboardInjector {
         SendKeybd(VK_RETURN, true);
     }
 
-    public static void FocusChatViaSmartResetSequence() {
-        // 1. Send Ctrl+L (Focuses or opens chat panel)
-        SendCtrlL();
-        Thread.Sleep(300);
+    public static void FocusChatViaCommandPalette() {
+        // Command Palette "Code with Agent" ALWAYS opens & focuses chat panel (never closes!)
+        SendCtrlShiftP();
+        Thread.Sleep(150);
+        Thread staThread = new Thread(() => {
+            try {
+                Clipboard.SetText("Code with Agent");
+            } catch {}
+        });
+        staThread.SetApartmentState(ApartmentState.STA);
+        staThread.Start();
+        staThread.Join();
 
-        // 2. Send Ctrl+L again to guarantee focus inside text box
-        SendCtrlL();
-        Thread.Sleep(400);
+        SendPasteKeybdEvent();
+        Thread.Sleep(100);
+        SendEnterKeybdEvent();
+        Thread.Sleep(300);
     }
 
     public static void NewChatViaShortcut() {
@@ -301,7 +310,7 @@ public class Win32ClipboardInjector {
             if (newChat) {
                 NewChatViaShortcut();
             } else {
-                FocusChatViaSmartResetSequence();
+                FocusChatViaCommandPalette();
             }
 
             // Pausa deliberada para asegurar que la caja de texto del chat esté 100% visible y enfocada
