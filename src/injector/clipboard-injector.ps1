@@ -125,18 +125,6 @@ public class Win32ClipboardInjector {
         SendKeybd(VK_CONTROL, true);
     }
 
-    public static void SendCtrlShiftL() {
-        SendKeybd(VK_CONTROL, false);
-        SendKeybd(VK_SHIFT, false);
-        Thread.Sleep(20);
-        SendKeybd(VK_L, false);
-        Thread.Sleep(20);
-        SendKeybd(VK_L, true);
-        Thread.Sleep(20);
-        SendKeybd(VK_SHIFT, true);
-        SendKeybd(VK_CONTROL, true);
-    }
-
     public static void SendCtrlShiftP() {
         SendKeybd(VK_CONTROL, false);
         SendKeybd(VK_SHIFT, false);
@@ -166,12 +154,12 @@ public class Win32ClipboardInjector {
     }
 
     public static void FocusChatViaCommandPalette() {
-        // Command Palette "Code with Agent" ALWAYS opens & focuses chat panel (never closes!)
+        // Command Palette "Toggle Agent" opens/focuses agent sidebar
         SendCtrlShiftP();
         Thread.Sleep(150);
         Thread staThread = new Thread(() => {
             try {
-                Clipboard.SetText("Code with Agent");
+                Clipboard.SetText("Toggle Agent");
             } catch {}
         });
         staThread.SetApartmentState(ApartmentState.STA);
@@ -184,9 +172,22 @@ public class Win32ClipboardInjector {
         Thread.Sleep(300);
     }
 
-    public static void NewChatViaShortcut() {
-        SendCtrlShiftL();
-        Thread.Sleep(400);
+    public static void NewChatViaCommandPalette() {
+        SendCtrlShiftP();
+        Thread.Sleep(150);
+        Thread staThread = new Thread(() => {
+            try {
+                Clipboard.SetText("New Conversation");
+            } catch {}
+        });
+        staThread.SetApartmentState(ApartmentState.STA);
+        staThread.Start();
+        staThread.Join();
+
+        SendPasteKeybdEvent();
+        Thread.Sleep(100);
+        SendEnterKeybdEvent();
+        Thread.Sleep(300);
     }
 
     public static InjectResult InjectText(string text, string targetTitle, string targetProcName, int focusDelayMs, int pasteDelayMs, bool submitEnter, string focusShortcut, string method, bool newChat) {
@@ -308,7 +309,7 @@ public class Win32ClipboardInjector {
             Thread.Sleep(300);
 
             if (newChat) {
-                NewChatViaShortcut();
+                NewChatViaCommandPalette();
             } else {
                 FocusChatViaCommandPalette();
             }
