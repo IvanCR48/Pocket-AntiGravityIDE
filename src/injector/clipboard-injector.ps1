@@ -296,6 +296,11 @@ public class Win32ClipboardInjector {
                 return res;
             }
 
+            // Clean title string to remove control characters/newlines that break JSON formatting
+            if (!string.IsNullOrEmpty(bestTitle)) {
+                bestTitle = System.Text.RegularExpressions.Regex.Replace(bestTitle, @"[\r\n\t]+", " ");
+            }
+
             // Restore & Focus Main Window
             IntPtr fgHwnd = GetForegroundWindow();
             uint dummy;
