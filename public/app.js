@@ -48,54 +48,60 @@ function parseMarkdown(text) {
 
   if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
     let html = marked.parse(text);
-    return postProcessCodeBlocks(html);
+
+    // Custom code block rendering with Copy button
+    html = html.replace(/<pre><code class="(?:language-)?([^"]+)">([\s\S]*?)<\/code><\/pre>/gi, (match, lang, code) => {
+      return `
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">${lang}</span>
+            <button class="copy-btn" onclick="copyCodeSnippet(this)">Copy</button>
+          </div>
+          <pre><code class="language-${lang}">${code}</code></pre>
+        </div>
+      `;
+    });
+
+    html = html.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/gi, (match, code) => {
+      return `
+        <div class="code-block-wrapper">
+          <div class="code-header">
+            <span class="code-lang">code</span>
+            <button class="copy-btn" onclick="copyCodeSnippet(this)">Copy</button>
+          </div>
+          <pre><code>${code}</code></pre>
+        </div>
+      `;
+    });
+
+    return html;
   }
 
-  // Fallback Lightweight Markdown Parser
-  let html = text
+  // Basic regex fallback
+  let escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Headings
-  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-
-  // Bold & Italics
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-  // Inline Code
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-  // Horizontal rules & Lists
-  html = html.replace(/^\-\-\-$/gim, '<hr>');
-  html = html.replace(/^\- (.*$)/gim, '<ul><li>$1</li></ul>');
-  html = html.replace(/<\/ul>\n<ul>/g, '');
-
-  // Line breaks
-  html = html.replace(/\n/g, '<br>');
-
-  return postProcessCodeBlocks(html);
-}
-
-/**
- * Wraps code blocks with custom headers and copy buttons.
- */
-function postProcessCodeBlocks(html) {
-  return html.replace(/<pre><code(?:\s+class="language-([^"]+)")?>([\s\S]*?)<\/code><\/pre>/gi, (match, lang, code) => {
-    const language = lang || 'code';
+  escaped = escaped.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const l = lang || 'code';
     return `
       <div class="code-block-wrapper">
         <div class="code-header">
-          <span>${language}</span>
-          <button class="code-copy-btn" onclick="copyCodeSnippet(this)">Copy</button>
+          <span class="code-lang">${l}</span>
+          <button class="copy-btn" onclick="copyCodeSnippet(this)">Copy</button>
         </div>
-        <pre class="code-block"><code>${code}</code></pre>
+        <pre><code class="language-${l}">${code.trim()}</code></pre>
       </div>
     `;
   });
+
+  escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+  escaped = escaped.replace(/\n/g, '<br/>');
+
+  return escaped;
 }
 
 // Global Copy Helper
@@ -220,25 +226,31 @@ function renderTreeNodes(nodes, container) {
       dirHeader.innerHTML = `📁 <span>${node.name}</span>`;
 
       const childrenContainer = document.createElement('div');
-      childrenContainer.className = 'tree-children';
-      childrenContainer.style.display = 'none';
+      childrenContainer.className = 'tree-children collapsed';
 
       dirHeader.addEventListener('click', () => {
-        const isHidden = childrenContainer.style.display === 'none';
-        childrenContainer.style.display = isHidden ? 'block' : 'none';
-        dirHeader.innerHTML = `${isHidden ? '📂' : '📁'} <span>${node.name}</span>`;
+        const isCollapsed = childrenContainer.classList.contains('collapsed');
+        if (isCollapsed) {
+          childrenContainer.classList.remove('collapsed');
+          dirHeader.innerHTML = `📂 <span>${node.name}</span>`;
+        } else {
+          childrenContainer.classList.add('collapsed');
+          dirHeader.innerHTML = `📁 <span>${node.name}</span>`;
+        }
       });
 
-      renderTreeNodes(node.children, childrenContainer);
       nodeEl.appendChild(dirHeader);
       nodeEl.appendChild(childrenContainer);
+
+      if (node.children && node.children.length > 0) {
+        renderTreeNodes(node.children, childrenContainer);
+      }
     } else {
       const fileItem = document.createElement('div');
       fileItem.className = 'tree-item file';
-      const formattedSize = node.size > 1024 ? `${(node.size / 1024).toFixed(1)} KB` : `${node.size} B`;
-      fileItem.innerHTML = `📄 <span>${node.name}</span> <span class="file-size">${formattedSize}</span>`;
+      fileItem.innerHTML = `📄 <span>${node.name}</span>`;
 
-      fileItem.addEventListener('click', () => openFileModal(node.path));
+      fileItem.addEventListener('click', () => openFileModal(node.relativePath));
       nodeEl.appendChild(fileItem);
     }
 
@@ -246,28 +258,24 @@ function renderTreeNodes(nodes, container) {
   });
 }
 
-// 4. Open File Content Viewer Modal
-async function openFileModal(relativePath) {
-  currentViewingFilePath = relativePath;
-  modalFileTitle.textContent = relativePath;
-  modalFileBody.textContent = 'Loading file content...';
+// 4. File Viewer Modal Logic
+async function openFileModal(relPath) {
+  currentViewingFilePath = relPath;
+  modalFileTitle.textContent = relPath;
+  modalFileBody.innerHTML = '<div class="loading-state">Loading file content...</div>';
   fileModal.style.display = 'flex';
 
   try {
-    const res = await fetch(`/api/workspace/file?path=${encodeURIComponent(relativePath)}`);
-    const text = await res.text();
-    try {
-      const data = JSON.parse(text);
-      if (data.success) {
-        modalFileBody.textContent = data.content;
-      } else {
-        modalFileBody.textContent = `Error: ${data.error}`;
-      }
-    } catch (_) {
-      modalFileBody.textContent = `Error reading file. Response: ${text}`;
+    const res = await fetch(`/api/workspace/file?path=${encodeURIComponent(relPath)}`);
+    const data = await res.json();
+    if (data.success) {
+      const parsed = parseMarkdown(`\`\`\`${data.language}\n${data.content}\n\`\`\``);
+      modalFileBody.innerHTML = parsed;
+    } else {
+      modalFileBody.innerHTML = `<div class="loading-state" style="color:#ef4444">Error: ${data.error}</div>`;
     }
   } catch (err) {
-    modalFileBody.textContent = `Failed to load file: ${err.message}`;
+    modalFileBody.innerHTML = `<div class="loading-state" style="color:#ef4444">Failed to load file: ${err.message}</div>`;
   }
 }
 
@@ -277,15 +285,9 @@ closeModalBtn.addEventListener('click', () => {
 
 attachFilePromptBtn.addEventListener('click', () => {
   if (currentViewingFilePath) {
-    const ref = `@${currentViewingFilePath}`;
-    if (promptInput.value.trim()) {
-      promptInput.value += ` ${ref}`;
-    } else {
-      promptInput.value = `Check file ${ref}`;
-    }
+    promptInput.value = `${promptInput.value} @${currentViewingFilePath} `.trimStart();
     fileModal.style.display = 'none';
-
-    // Switch back to Chat tab
+    // Switch to Chat tab
     tabChatBtn.click();
     promptInput.focus();
   }
@@ -298,53 +300,59 @@ async function loadSessions() {
     const data = await res.json();
 
     sessionSelect.innerHTML = '';
-    data.sessions.forEach((s) => {
-      const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = `${s.promptSnippet || s.id.substring(0, 8)}...`;
-      if (s.id === data.activeConversationId) {
-        opt.selected = true;
-        activeSessionId = s.id;
-      }
-      sessionSelect.appendChild(opt);
-    });
+    if (data.sessions && data.sessions.length > 0) {
+      data.sessions.forEach((s) => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        const dateStr = new Date(s.mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        opt.textContent = `Session ${s.id.substring(0, 8)} (${dateStr})`;
+        if (s.id === data.activeConversationId) {
+          opt.selected = true;
+        }
+        sessionSelect.appendChild(opt);
+      });
 
-    if (activeSessionId) {
+      activeSessionId = data.activeConversationId || data.sessions[0].id;
       loadMessages(activeSessionId);
+    } else {
+      const opt = document.createElement('option');
+      opt.textContent = 'No sessions available';
+      sessionSelect.appendChild(opt);
     }
   } catch (err) {
     console.error("Error loading sessions:", err);
   }
 }
 
-// 6. Handle New Chat Session
+// 6. New Chat Button Listener
 if (newChatBtn) {
   newChatBtn.addEventListener('click', async () => {
-    const origText = newChatBtn.textContent;
-    newChatBtn.textContent = '⏳ Creating...';
-
+    chatContainer.innerHTML = '<div class="loading-state">Starting new conversation...</div>';
     try {
       const res = await fetch('/api/sessions/new', { method: 'POST' });
       const data = await res.json();
-
       if (data.success) {
-        chatContainer.innerHTML = '';
-        activeSessionId = data.activeConversationId;
-        await loadSessions();
-        renderMessage('assistant', '✨ Started a new chat session in Antigravity IDE!');
+        chatContainer.innerHTML = `
+          <div style="text-align: center; color: #a1a1aa; padding: 40px 20px; margin: auto;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">✨</div>
+            <div style="font-size: 1.15rem; font-weight: 600; color: #f4f4f5; margin-bottom: 6px;">New Conversation Started</div>
+            <div style="font-size: 0.88rem; color: #a1a1aa;">Send a prompt below to begin chatting with Antigravity Assistant.</div>
+          </div>
+        `;
+        activeSessionId = null;
+        setTimeout(loadSessions, 1500);
       } else {
-        alert(`New Chat Error: ${data.error}`);
+        alert(`Error starting new chat: ${data.error}`);
       }
     } catch (err) {
-      alert(`Failed to create new chat: ${err.message}`);
-    } finally {
-      newChatBtn.textContent = origText;
+      alert(`Error starting new chat: ${err.message}`);
     }
   });
 }
 
-// 7. Load Session Messages
+// 7. Load Messages for Session
 async function loadMessages(sessionId) {
+  if (!sessionId) return;
   try {
     const res = await fetch(`/api/sessions/${sessionId}`);
     const data = await res.json();
