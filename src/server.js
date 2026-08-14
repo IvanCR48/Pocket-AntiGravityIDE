@@ -2,53 +2,48 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
+const fs = require('fs');
 
-const { focusWindow } = require('./injector/window-finder');
-const { getChatState } = require('./injector/check-chat-state');
-const PromptQueue = require('./injector/queue');
 const { listSessions, readTranscript, DEFAULT_BRAIN_DIR } = require('./transcript/reader');
-const { getWorkspaceTree, getWorkspaceFileContent } = require('./workspace/explorer');
 const TranscriptWatcher = require('./transcript/watcher');
-
-const PORT = process.env.PORT || 3000;
-const WORKSPACE_ROOT = path.resolve(__dirname, '..');
-const UPLOAD_DIR = path.join(__dirname, '../uploads');
-
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `upload_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`);
-  }
-});
-const upload = multer({ storage });
+const { getWorkspaceTree, getWorkspaceFileContent, WORKSPACE_ROOT } = require('./workspace/explorer');
+const PromptQueue = require('./injector/queue');
+const { getChatState } = require('./injector/check-chat-state');
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Initialize FIFO Prompt Queue
 const promptQueue = new PromptQueue();
 
-// Real-time transcript watcher instance
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Configure Multer for File & Image Uploads
+const uploadDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
+// Active state
 let activeConversationId = null;
+
+// Transcript Log Watcher
 const watcher = new TranscriptWatcher({
   brainDir: DEFAULT_BRAIN_DIR,
   onNewStep: (convId, stepData) => {
-    // Detect agent activity state
-    const isAssistantStep = stepData.type === 'PLANNER_RESPONSE' || stepData.source === 'MODEL';
-    promptQueue.setAgentBusy(isAssistantStep);
-
+    // Broadcast step to all connected WebSocket clients
     const payload = JSON.stringify({
       type: 'TRANSCRIPT_STEP',
       conversationId: convId,
@@ -69,6 +64,26 @@ if (initialSessions.length > 0) {
   watcher.start(activeConversationId);
 }
 
+// Auto-detect newly created sessions on disk every 1000ms
+setInterval(() => {
+  const sessions = listSessions(DEFAULT_BRAIN_DIR);
+  if (sessions.length > 0 && sessions[0].id !== activeConversationId) {
+    console.log(`[Server] Auto-detected new conversation session: ${sessions[0].id}`);
+    activeConversationId = sessions[0].id;
+    watcher.start(activeConversationId);
+
+    const payload = JSON.stringify({
+      type: 'SESSION_AUTO_SWITCHED',
+      conversationId: activeConversationId
+    });
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+      }
+    });
+  }
+}, 1000);
+
 // Background chat state broadcaster
 let currentChatState = { stateString: 'UNKNOWN', isChatOpen: false, isChatFocused: false };
 setInterval(async () => {
@@ -87,35 +102,46 @@ setInterval(async () => {
   }
 }, 3000);
 
-// REST API Endpoints
-
-// 1. Status endpoint
-app.get('/api/status', async (req, res) => {
-  const winStatus = await focusWindow({ targetTitle: 'Antigravity IDE', processName: 'Antigravity IDE' });
-  const chatState = await getChatState();
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
+// WebSocket Connection Handler
+wss.on('connection', (ws) => {
+  console.log('[WebSocket] Client connected.');
+  ws.send(JSON.stringify({
+    type: 'INIT',
     activeConversationId,
-    pendingPromptsInQueue: promptQueue.getPendingCount(),
-    chatState: chatState,
-    window: winStatus
+    chatState: currentChatState
+  }));
+
+  ws.on('close', () => {
+    console.log('[WebSocket] Client disconnected.');
   });
 });
 
-// 2. Chat State endpoint
+// ----------------------------------------------------
+// REST API ENDPOINTS
+// ----------------------------------------------------
+
+// 1. Health Check
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    activeConversationId,
+    pendingPromptsInQueue: promptQueue.getPendingCount()
+  });
+});
+
+// 2. Get Live Chat State
 app.get('/api/chat-state', async (req, res) => {
   const state = await getChatState();
   res.json(state);
 });
 
-// 3. Send prompt (Queued via PromptQueue)
+// 3. Send Prompt (Text or Image or File reference)
 app.post('/api/send', upload.single('image'), async (req, res) => {
-  const text = req.body.text || req.body.prompt || '';
+  const text = req.body.text || '';
   const filePath = req.body.filePath || '';
-  const uploadedImage = req.file ? req.file.path : (req.body.imagePath || '');
   const focusShortcut = req.body.focusShortcut || 'Auto';
   const method = req.body.method || 'keybd_event';
+  const uploadedImage = req.file ? req.file.path : null;
 
   if (!text && !uploadedImage && !filePath) {
     return res.status(400).json({ error: 'Must provide prompt text, image upload, or file path.' });
@@ -123,7 +149,6 @@ app.post('/api/send', upload.single('image'), async (req, res) => {
 
   console.log(`[API /send] Queueing prompt - Text: "${text}", Image: "${uploadedImage}", File: "${filePath}"`);
 
-  // Enqueue prompt for sequential injection
   const result = await promptQueue.enqueue({
     text,
     filePath,
@@ -178,19 +203,12 @@ app.post('/api/sessions/new', async (req, res) => {
     return res.status(500).json({ success: false, error: result.error });
   }
 
-  // Wait 1000ms for the IDE to create the new session on disk
-  await new Promise(r => setTimeout(r, 1000));
-
-  const sessions = listSessions(DEFAULT_BRAIN_DIR);
-  if (sessions.length > 0) {
-    activeConversationId = sessions[0].id;
-    watcher.start(activeConversationId);
-  }
+  // Set pending state until first prompt creates the new session on disk
+  activeConversationId = 'NEW_PENDING_SESSION';
 
   res.json({
     success: true,
-    activeConversationId,
-    sessions
+    activeConversationId
   });
 });
 
@@ -215,27 +233,12 @@ app.get('/api/workspace/file', (req, res) => {
   }
 });
 
-// WebSocket Connection Handler
-wss.on('connection', (ws) => {
-  console.log('[WebSocket] Client connected.');
-
-  ws.send(JSON.stringify({
-    type: 'INIT',
-    activeConversationId,
-    chatState: currentChatState
-  }));
-
-  ws.on('close', () => {
-    console.log('[WebSocket] Client disconnected.');
-  });
-});
-
+// Start Server
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\n==================================================`);
+  console.log(`===================================================`);
   console.log(`🚀 Pocket Antigravity Server running on port ${PORT}`);
-  console.log(`- Local URL: http://localhost:${PORT}`);
-  console.log(`- WebSocket: ws://localhost:${PORT}/ws`);
-  console.log(`- Workspace: ${WORKSPACE_ROOT}`);
-  console.log(`- Active Session: ${activeConversationId || 'None'}`);
-  console.log(`==================================================\n`);
+  console.log(`📁 Workspace Root: ${WORKSPACE_ROOT}`);
+  console.log(`🧠 Brain Transcripts: ${DEFAULT_BRAIN_DIR}`);
+  console.log(`===================================================`);
 });
