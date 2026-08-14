@@ -3,8 +3,8 @@ param (
     [string]$Text = "",
     [string]$TargetTitle = "Antigravity IDE",
     [string]$ProcessName = "Antigravity IDE",
-    [int]$FocusDelayMs = 600,
-    [int]$PasteDelayMs = 300,
+    [int]$FocusDelayMs = 500,
+    [int]$PasteDelayMs = 250,
     [switch]$SendEnter = $true,
     [string]$FocusShortcut = "Auto", # "Auto", "Ctrl+Alt+I", "Ctrl+L", "Ctrl+Shift+I", "None"
     [string]$Method = "keybd_event",
@@ -154,12 +154,12 @@ public class Win32ClipboardInjector {
     }
 
     public static void FocusChatViaCommandPalette() {
-        // Command Palette "Toggle Agent" opens/focuses agent sidebar
+        // 1. Command Palette "Agent: Focus on Agent View" opens & activates the Agent panel
         SendCtrlShiftP();
         Thread.Sleep(150);
         Thread staThread = new Thread(() => {
             try {
-                Clipboard.SetText("Toggle Agent");
+                Clipboard.SetText("Agent: Focus on Agent View");
             } catch {}
         });
         staThread.SetApartmentState(ApartmentState.STA);
@@ -169,7 +169,11 @@ public class Win32ClipboardInjector {
         SendPasteKeybdEvent();
         Thread.Sleep(100);
         SendEnterKeybdEvent();
-        Thread.Sleep(300);
+        Thread.Sleep(200);
+
+        // 2. Ctrl+L locks focus directly into the chat input box
+        SendCtrlL();
+        Thread.Sleep(250);
     }
 
     public static void NewChatViaCommandPalette() {
@@ -306,7 +310,7 @@ public class Win32ClipboardInjector {
             if (attachedTarget) AttachThreadInput(curThread, targetThread, false);
             if (attachedFg) AttachThreadInput(curThread, fgThread, false);
 
-            Thread.Sleep(300);
+            Thread.Sleep(250);
 
             if (newChat) {
                 NewChatViaCommandPalette();
