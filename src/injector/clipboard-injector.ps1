@@ -92,6 +92,7 @@ public class Win32ClipboardInjector {
     public const byte VK_MENU = 0x12;    // Alt key
     public const byte VK_SHIFT = 0x10;   // Shift key
     public const byte VK_CONTROL = 0x11; // Ctrl key
+    public const byte VK_1 = 0x31;       // 1 key
     public const byte VK_I = 0x49;       // I key
     public const byte VK_L = 0x4C;       // L key
     public const byte VK_N = 0x4E;       // N key
@@ -120,6 +121,16 @@ public class Win32ClipboardInjector {
         SendKeybd(VK_ESCAPE, false);
         Thread.Sleep(20);
         SendKeybd(VK_ESCAPE, true);
+    }
+
+    public static void SendCtrl1() {
+        SendKeybd(VK_CONTROL, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_1, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_1, true);
+        Thread.Sleep(20);
+        SendKeybd(VK_CONTROL, true);
     }
 
     public static void SendCtrlL() {
@@ -161,9 +172,9 @@ public class Win32ClipboardInjector {
     }
 
     public static void FocusChatViaCommandPalette() {
-        // 0. Send Escape first to safely release focus if cursor was already locked inside chat input box
-        SendEscape();
-        Thread.Sleep(100);
+        // 0. Send Ctrl+1 first to safely move focus out of Terminal (Ctrl+J), Output, or Chat bar into the editor
+        SendCtrl1();
+        Thread.Sleep(150);
 
         // 1. Command Palette "Agent: Focus on Agent View" opens & activates the Agent panel
         SendCtrlShiftP();
