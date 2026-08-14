@@ -88,6 +88,7 @@ public class Win32ClipboardInjector {
     public const uint SWP_SHOWWINDOW = 0x0040;
     public const uint SWP_FLAGS = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
 
+    public const byte VK_ESCAPE = 0x1B;  // Escape key
     public const byte VK_MENU = 0x12;    // Alt key
     public const byte VK_SHIFT = 0x10;   // Shift key
     public const byte VK_CONTROL = 0x11; // Ctrl key
@@ -113,6 +114,12 @@ public class Win32ClipboardInjector {
     public static void SendKeybd(byte vk, bool keyUp) {
         uint flags = keyUp ? KEYEVENTF_KEYUP : 0;
         keybd_event(vk, 0, flags, UIntPtr.Zero);
+    }
+
+    public static void SendEscape() {
+        SendKeybd(VK_ESCAPE, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_ESCAPE, true);
     }
 
     public static void SendCtrlL() {
@@ -154,6 +161,10 @@ public class Win32ClipboardInjector {
     }
 
     public static void FocusChatViaCommandPalette() {
+        // 0. Send Escape first to safely release focus if cursor was already locked inside chat input box
+        SendEscape();
+        Thread.Sleep(100);
+
         // 1. Command Palette "Agent: Focus on Agent View" opens & activates the Agent panel
         SendCtrlShiftP();
         Thread.Sleep(150);
