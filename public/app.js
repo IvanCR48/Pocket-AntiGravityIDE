@@ -175,7 +175,16 @@ function initWebSocket() {
     try {
       const data = JSON.parse(event.data);
       if (data.type === 'TRANSCRIPT_STEP') {
+        if (activeSessionId === 'NEW_PENDING_SESSION') {
+          activeSessionId = data.conversationId;
+          chatContainer.innerHTML = '';
+        }
         appendMessageFromStep(data.step);
+      } else if (data.type === 'SESSION_AUTO_SWITCHED') {
+        console.log('[WS] Auto-switched to new session:', data.conversationId);
+        activeSessionId = data.conversationId;
+        chatContainer.innerHTML = '';
+        loadSessions();
       } else if (data.type === 'CHAT_STATE_UPDATE') {
         updateChatStateBadge(data.state);
       } else if (data.type === 'INIT') {
@@ -295,6 +304,7 @@ attachFilePromptBtn.addEventListener('click', () => {
 
 // 5. Load Sessions List
 async function loadSessions() {
+  if (activeSessionId === 'NEW_PENDING_SESSION') return;
   try {
     const res = await fetch('/api/sessions');
     const data = await res.json();
@@ -312,8 +322,10 @@ async function loadSessions() {
         sessionSelect.appendChild(opt);
       });
 
-      activeSessionId = data.activeConversationId || data.sessions[0].id;
-      loadMessages(activeSessionId);
+      if (!activeSessionId) {
+        activeSessionId = data.activeConversationId || data.sessions[0].id;
+        loadMessages(activeSessionId);
+      }
     } else {
       const opt = document.createElement('option');
       opt.textContent = 'No sessions available';
@@ -332,6 +344,7 @@ if (newChatBtn) {
       const res = await fetch('/api/sessions/new', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
+        activeSessionId = 'NEW_PENDING_SESSION';
         chatContainer.innerHTML = `
           <div style="text-align: center; color: #a1a1aa; padding: 40px 20px; margin: auto;">
             <div style="font-size: 2.5rem; margin-bottom: 12px;">✨</div>
@@ -339,8 +352,6 @@ if (newChatBtn) {
             <div style="font-size: 0.88rem; color: #a1a1aa;">Send a prompt below to begin chatting with Antigravity Assistant.</div>
           </div>
         `;
-        activeSessionId = null;
-        setTimeout(loadSessions, 1500);
       } else {
         alert(`Error starting new chat: ${data.error}`);
       }
@@ -352,7 +363,7 @@ if (newChatBtn) {
 
 // 7. Load Messages for Session
 async function loadMessages(sessionId) {
-  if (!sessionId) return;
+  if (!sessionId || sessionId === 'NEW_PENDING_SESSION') return;
   try {
     const res = await fetch(`/api/sessions/${sessionId}`);
     const data = await res.json();
@@ -406,6 +417,10 @@ function scrollToBottom() {
 async function handleSend() {
   const text = promptInput.value.trim();
   if (!text && !selectedFile) return;
+
+  if (activeSessionId === 'NEW_PENDING_SESSION') {
+    chatContainer.innerHTML = '';
+  }
 
   renderMessage('user', text || '[Attachment]');
   promptInput.value = '';
