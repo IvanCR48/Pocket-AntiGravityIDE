@@ -65,10 +65,12 @@ function injectText(options = {}) {
       }
 
       try {
-        const trimmed = stdout.trim();
+        const trimmed = (stdout || '').trim();
         const jsonMatch = trimmed.match(/\{.*\}$/s);
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
+          // Replace raw unescaped newlines/tabs inside string values before parsing
+          const cleanJson = jsonMatch[0].replace(/[\r\n\t]+/g, ' ');
+          const parsed = JSON.parse(cleanJson);
           return resolve({
             success: Boolean(parsed.Success),
             hwnd: parsed.HWND || '0x0',
