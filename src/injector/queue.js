@@ -44,8 +44,8 @@ class PromptQueue {
           text: item.text,
           targetTitle: 'Antigravity IDE',
           processName: 'Antigravity IDE',
-          focusDelayMs: 400,
-          pasteDelayMs: 250,
+          focusDelayMs: 600,
+          pasteDelayMs: 300,
           submitEnter: true
         });
       } else {
@@ -53,8 +53,8 @@ class PromptQueue {
           text: item.text,
           targetTitle: 'Antigravity IDE',
           processName: 'Antigravity IDE',
-          focusDelayMs: 400,
-          pasteDelayMs: 250,
+          focusDelayMs: 600,
+          pasteDelayMs: 300,
           submitEnter: true,
           focusShortcut: item.focusShortcut || 'Auto',
           method: item.method || 'keybd_event',
