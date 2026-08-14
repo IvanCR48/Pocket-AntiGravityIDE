@@ -143,6 +143,18 @@ public class Win32ClipboardInjector {
         SendKeybd(VK_CONTROL, true);
     }
 
+    public static void SendCtrlShiftL() {
+        SendKeybd(VK_CONTROL, false);
+        SendKeybd(VK_SHIFT, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_L, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_L, true);
+        Thread.Sleep(20);
+        SendKeybd(VK_SHIFT, true);
+        SendKeybd(VK_CONTROL, true);
+    }
+
     public static void SendCtrlShiftP() {
         SendKeybd(VK_CONTROL, false);
         SendKeybd(VK_SHIFT, false);
@@ -198,21 +210,9 @@ public class Win32ClipboardInjector {
         Thread.Sleep(250);
     }
 
-    public static void NewChatViaCommandPalette() {
-        SendCtrlShiftP();
-        Thread.Sleep(150);
-        Thread staThread = new Thread(() => {
-            try {
-                Clipboard.SetText("New Conversation");
-            } catch {}
-        });
-        staThread.SetApartmentState(ApartmentState.STA);
-        staThread.Start();
-        staThread.Join();
-
-        SendPasteKeybdEvent();
-        Thread.Sleep(100);
-        SendEnterKeybdEvent();
+    public static void NewChatViaShortcut() {
+        // Direct native shortcut for antigravity.startNewConversation
+        SendCtrlShiftL();
         Thread.Sleep(300);
     }
 
@@ -340,7 +340,7 @@ public class Win32ClipboardInjector {
             Thread.Sleep(250);
 
             if (newChat) {
-                NewChatViaCommandPalette();
+                NewChatViaShortcut();
             } else {
                 FocusChatViaCommandPalette();
             }
