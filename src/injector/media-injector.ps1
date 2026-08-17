@@ -40,6 +40,9 @@ public class Win32MediaInjector {
     public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
 
     [DllImport("user32.dll")]
+    public static extern bool OpenIcon(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
     public static extern bool IsIconic(IntPtr hWnd);
 
     [DllImport("user32.dll")]
@@ -66,6 +69,9 @@ public class Win32MediaInjector {
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern int GetWindowTextLength(IntPtr hWnd);
 
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
     [DllImport("user32.dll")]
@@ -82,7 +88,12 @@ public class Win32MediaInjector {
     public const uint SWP_SHOWWINDOW = 0x0040;
     public const uint SWP_FLAGS = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
 
+    public const byte VK_ESCAPE = 0x1B;
+    public const byte VK_SHIFT = 0x10;
     public const byte VK_CONTROL = 0x11;
+    public const byte VK_1 = 0x31;
+    public const byte VK_L = 0x4C;
+    public const byte VK_P = 0x50;
     public const byte VK_V = 0x56;
     public const byte VK_RETURN = 0x0D;
     public const uint KEYEVENTF_KEYUP = 0x0002;
@@ -101,45 +112,41 @@ public class Win32MediaInjector {
         public string Error;
     }
 
-    public static void BringToTopZOrder(IntPtr targetHwnd) {
-        IntPtr fgHwnd = GetForegroundWindow();
-        uint dummy;
-        uint fgThread = GetWindowThreadProcessId(fgHwnd, out dummy);
-        uint targetThread = GetWindowThreadProcessId(targetHwnd, out dummy);
-        uint curThread = GetCurrentThreadId();
-
-        bool attachedFg = false;
-        bool attachedTarget = false;
-
-        if (fgThread != curThread && fgThread != 0) {
-            attachedFg = AttachThreadInput(curThread, fgThread, true);
-        }
-        if (targetThread != curThread && targetThread != 0) {
-            attachedTarget = AttachThreadInput(curThread, targetThread, true);
-        }
-
-        AllowSetForegroundWindow(ASFW_ANY);
-
-        if (IsIconic(targetHwnd)) {
-            ShowWindowAsync(targetHwnd, SW_RESTORE);
-        } else {
-            ShowWindowAsync(targetHwnd, SW_SHOW);
-        }
-
-        SetWindowPos(targetHwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_FLAGS);
-        SetWindowPos(targetHwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_FLAGS);
-
-        BringWindowToTop(targetHwnd);
-        SetForegroundWindow(targetHwnd);
-        SwitchToThisWindow(targetHwnd, true);
-
-        if (attachedTarget) AttachThreadInput(curThread, targetThread, false);
-        if (attachedFg) AttachThreadInput(curThread, fgThread, false);
-    }
-
     public static void SendKeybd(byte vk, bool keyUp) {
         uint flags = keyUp ? KEYEVENTF_KEYUP : 0;
         keybd_event(vk, 0, flags, UIntPtr.Zero);
+    }
+
+    public static void SendCtrl1() {
+        SendKeybd(VK_CONTROL, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_1, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_1, true);
+        Thread.Sleep(20);
+        SendKeybd(VK_CONTROL, true);
+    }
+
+    public static void SendCtrlL() {
+        SendKeybd(VK_CONTROL, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_L, false);
+        Thread.Sleep(20);
+        SendKeybd(VK_L, true);
+        Thread.Sleep(20);
+        SendKeybd(VK_CONTROL, true);
+    }
+
+    public static void SendCtrlShiftP() {
+        SendKeybd(VK_CONTROL, false);
+        SendKeybd(VK_SHIFT, false);
+        Thread.Sleep(30);
+        SendKeybd(VK_P, false);
+        Thread.Sleep(30);
+        SendKeybd(VK_P, true);
+        Thread.Sleep(30);
+        SendKeybd(VK_SHIFT, true);
+        SendKeybd(VK_CONTROL, true);
     }
 
     public static void SendPasteKeybdEvent() {
@@ -152,6 +159,33 @@ public class Win32MediaInjector {
     public static void SendEnterKeybdEvent() {
         SendKeybd(VK_RETURN, false); Thread.Sleep(40);
         SendKeybd(VK_RETURN, true);
+    }
+
+    public static void FocusChatViaCommandPalette() {
+        // 0. Send Ctrl+1 first to safely move focus out of Terminal/editor
+        SendCtrl1();
+        Thread.Sleep(150);
+
+        // 1. Command Palette "Agent: Focus on Agent View" opens & activates the Agent panel
+        SendCtrlShiftP();
+        Thread.Sleep(150);
+        Thread staThread = new Thread(() => {
+            try {
+                Clipboard.SetText("Agent: Focus on Agent View");
+            } catch {}
+        });
+        staThread.SetApartmentState(ApartmentState.STA);
+        staThread.Start();
+        staThread.Join();
+
+        SendPasteKeybdEvent();
+        Thread.Sleep(100);
+        SendEnterKeybdEvent();
+        Thread.Sleep(200);
+
+        // 2. Ctrl+L locks focus directly into the chat input box
+        SendCtrlL();
+        Thread.Sleep(250);
     }
 
     public static MediaInjectResult InjectMedia(string imagePath, string filePath, string text, string targetTitle, string targetProcName, int focusDelayMs, int pasteDelayMs, bool submitEnter) {
@@ -178,6 +212,12 @@ public class Win32MediaInjector {
                     if (!string.IsNullOrEmpty(targetProcName) &&
                         p.ProcessName.IndexOf(targetProcName, StringComparison.OrdinalIgnoreCase) >= 0) {
                         targetPids.Add((uint)p.Id);
+                        p.Refresh();
+                        if (p.MainWindowHandle != IntPtr.Zero) {
+                            bestHwnd = p.MainWindowHandle;
+                            bestTitle = p.MainWindowTitle;
+                            bestPid = (uint)p.Id;
+                        }
                     }
                 } catch {}
             }
@@ -186,7 +226,6 @@ public class Win32MediaInjector {
                 uint pid = 0;
                 GetWindowThreadProcessId(hWnd, out pid);
 
-                // Exclude Web Browsers from window matching
                 string pName = "";
                 try {
                     Process p = Process.GetProcessById((int)pid);
@@ -194,12 +233,7 @@ public class Win32MediaInjector {
                 } catch {}
 
                 if (pName.IndexOf("chrome", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    pName.IndexOf("msedge", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    pName.IndexOf("firefox", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    pName.IndexOf("brave", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    pName.IndexOf("opera", StringComparison.OrdinalIgnoreCase) >= 0) {
-                    return true; // Skip browser windows!
-                }
+                    pName.IndexOf("msedge", StringComparison.OrdinalIgnoreCase) >= 0) return true;
 
                 bool isTargetPid = targetPids.Contains(pid);
 
@@ -211,15 +245,21 @@ public class Win32MediaInjector {
                     title = sb.ToString();
                 }
 
-                bool titleMatch = !string.IsNullOrEmpty(targetTitle) &&
-                                  title.IndexOf(targetTitle, StringComparison.OrdinalIgnoreCase) >= 0;
+                StringBuilder sbClass = new StringBuilder(256);
+                GetClassName(hWnd, sbClass, 256);
+                string className = sbClass.ToString();
 
-                if (isTargetPid || titleMatch) {
+                bool isElectronWidget = className.IndexOf("Chrome_WidgetWin_1", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool titleMatch = !string.IsNullOrEmpty(targetTitle) &&
+                                  (title.IndexOf(targetTitle, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                   title.IndexOf("Antigravity", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                if ((isTargetPid || titleMatch) && isElectronWidget) {
                     if (IsWindowVisible(hWnd) || bestHwnd == IntPtr.Zero) {
                         bestHwnd = hWnd;
                         bestTitle = title;
                         bestPid = pid;
-                        if (IsWindowVisible(hWnd) && (titleMatch || !string.IsNullOrEmpty(title))) {
+                        if (IsWindowVisible(hWnd) && titleMatch) {
                             return false;
                         }
                     }
@@ -228,11 +268,55 @@ public class Win32MediaInjector {
             }, IntPtr.Zero);
 
             if (bestHwnd == IntPtr.Zero) {
-                res.Error = "Antigravity IDE window not found. (Make sure process 'Antigravity IDE' is running).";
+                res.Error = "Target window not found.";
                 return res;
             }
 
-            BringToTopZOrder(bestHwnd);
+            // Clean title string to remove control characters/newlines
+            if (!string.IsNullOrEmpty(bestTitle)) {
+                bestTitle = System.Text.RegularExpressions.Regex.Replace(bestTitle, @"[\r\n\t]+", " ");
+            }
+
+            // Restore & Focus Main Window
+            IntPtr fgHwnd = GetForegroundWindow();
+            uint dummy;
+            uint fgThread = GetWindowThreadProcessId(fgHwnd, out dummy);
+            uint targetThread = GetWindowThreadProcessId(bestHwnd, out dummy);
+            uint curThread = GetCurrentThreadId();
+
+            bool attachedFg = false;
+            bool attachedTarget = false;
+
+            if (fgThread != curThread && fgThread != 0) {
+                attachedFg = AttachThreadInput(curThread, fgThread, true);
+            }
+            if (targetThread != curThread && targetThread != 0) {
+                attachedTarget = AttachThreadInput(curThread, targetThread, true);
+            }
+
+            AllowSetForegroundWindow(ASFW_ANY);
+
+            if (IsIconic(bestHwnd)) {
+                OpenIcon(bestHwnd);
+                ShowWindowAsync(bestHwnd, SW_RESTORE);
+            } else {
+                ShowWindowAsync(bestHwnd, SW_SHOW);
+            }
+
+            SetWindowPos(bestHwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_FLAGS);
+            SetWindowPos(bestHwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_FLAGS);
+
+            BringWindowToTop(bestHwnd);
+            SetForegroundWindow(bestHwnd);
+            SwitchToThisWindow(bestHwnd, true);
+
+            if (attachedTarget) AttachThreadInput(curThread, targetThread, false);
+            if (attachedFg) AttachThreadInput(curThread, fgThread, false);
+
+            Thread.Sleep(250);
+
+            FocusChatViaCommandPalette();
+
             Thread.Sleep(focusDelayMs);
 
             // Step 1: Inject Image if provided

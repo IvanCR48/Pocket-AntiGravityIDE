@@ -21,7 +21,7 @@ function injectMedia(options = {}) {
     imagePath = '',
     filePath = '',
     text = '',
-    targetTitle = 'Antigravity',
+    targetTitle = 'Antigravity IDE',
     processName = 'Antigravity IDE',
     focusDelayMs = 500,
     pasteDelayMs = 300,
@@ -61,10 +61,11 @@ function injectMedia(options = {}) {
       }
 
       try {
-        const trimmed = stdout.trim();
+        const trimmed = (stdout || '').trim();
         const jsonMatch = trimmed.match(/\{.*\}$/s);
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
+          const cleanJson = jsonMatch[0].replace(/[\r\n\t]+/g, ' ');
+          const parsed = JSON.parse(cleanJson);
           return resolve({
             success: Boolean(parsed.Success),
             hwnd: parsed.HWND || '0x0',
