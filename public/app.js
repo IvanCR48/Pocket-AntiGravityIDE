@@ -18,7 +18,6 @@ const sendBtn = document.getElementById('send-btn');
 const attachBtn = document.getElementById('attach-btn');
 const fileInput = document.getElementById('file-input');
 const sessionSelect = document.getElementById('session-select');
-const focusShortcutSelect = document.getElementById('focus-shortcut-select');
 const statusBadge = document.getElementById('status-badge');
 const chatStateBadge = document.getElementById('chat-state-badge');
 const previewArea = document.getElementById('attachment-preview');
@@ -296,7 +295,7 @@ async function openFileModal(relPath) {
     const res = await fetch(`/api/workspace/file?path=${encodeURIComponent(relPath)}`);
     const data = await res.json();
     if (data.success) {
-      const parsed = parseMarkdown(`\`\`\`${data.language}\n${data.content}\n\`\`\``);
+      const parsed = parseMarkdown(`\`\`\`${data.language || 'plaintext'}\n${data.content}\n\`\`\``);
       modalFileBody.innerHTML = parsed;
     } else {
       modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Error: ${data.error}</div>`;
@@ -446,7 +445,7 @@ async function handleSend() {
   const formData = new FormData();
   if (text) formData.append('text', text);
   if (selectedFile) formData.append('image', selectedFile);
-  if (focusShortcutSelect) formData.append('focusShortcut', focusShortcutSelect.value);
+  formData.append('focusShortcut', 'Auto');
 
   // Clear preview
   selectedFile = null;
