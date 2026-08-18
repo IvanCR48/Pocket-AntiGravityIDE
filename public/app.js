@@ -11,6 +11,7 @@ const tabChatBtn = document.getElementById('tab-chat-btn');
 const tabFilesBtn = document.getElementById('tab-files-btn');
 const newChatBtn = document.getElementById('new-chat-btn');
 const refreshFilesBtn = document.getElementById('refresh-files-btn');
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
 const promptInput = document.getElementById('prompt-input');
 const sendBtn = document.getElementById('send-btn');
@@ -29,6 +30,25 @@ const modalFileTitle = document.getElementById('modal-file-title');
 const modalFileBody = document.getElementById('modal-file-body');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const attachFilePromptBtn = document.getElementById('attach-file-prompt-btn');
+
+// Theme Switcher Logic
+function initTheme() {
+  const savedTheme = localStorage.getItem('pocket_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+  }
+}
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const nextTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('pocket_theme', nextTheme);
+    themeToggleBtn.textContent = nextTheme === 'dark' ? '🌙' : '☀️';
+  });
+}
 
 // Configure Marked.js options if available
 if (typeof marked !== 'undefined') {
@@ -112,7 +132,11 @@ window.copyCodeSnippet = function(btn) {
   navigator.clipboard.writeText(codeText).then(() => {
     const orig = btn.textContent;
     btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = orig; }, 2000);
+    btn.style.color = '#4ec9b0';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.color = '';
+    }, 2000);
   });
 };
 
@@ -124,20 +148,17 @@ function updateChatStateBadge(state) {
   if (!dot || !text) return;
 
   if (state.isChatFocused) {
-    dot.style.background = '#10b981';
-    dot.style.boxShadow = '0 0 8px #10b981';
+    dot.style.background = 'var(--accent-success)';
     text.textContent = 'Chat: Focused';
-    chatStateBadge.style.color = '#10b981';
+    chatStateBadge.style.borderColor = 'var(--accent-success)';
   } else if (state.isChatOpen) {
-    dot.style.background = '#f59e0b';
-    dot.style.boxShadow = '0 0 8px #f59e0b';
-    text.textContent = 'Chat: Opened';
-    chatStateBadge.style.color = '#f59e0b';
+    dot.style.background = 'var(--accent-warning)';
+    text.textContent = 'Chat: Open';
+    chatStateBadge.style.borderColor = 'var(--border-color)';
   } else {
-    dot.style.background = '#a1a1aa';
-    dot.style.boxShadow = 'none';
+    dot.style.background = 'var(--text-muted)';
     text.textContent = 'Chat: Closed';
-    chatStateBadge.style.color = '#a1a1aa';
+    chatStateBadge.style.borderColor = 'var(--border-color)';
   }
 }
 
@@ -167,8 +188,7 @@ function initWebSocket() {
   ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
-    statusBadge.innerHTML = '<span class="status-dot"></span> <span>Connected</span>';
-    statusBadge.style.color = '#10b981';
+    statusBadge.innerHTML = '<span class="status-dot"></span> <span>Online</span>';
   };
 
   ws.onmessage = (event) => {
@@ -181,7 +201,6 @@ function initWebSocket() {
         }
         appendMessageFromStep(data.step);
       } else if (data.type === 'SESSION_AUTO_SWITCHED') {
-        console.log('[WS] Auto-switched to new session:', data.conversationId);
         activeSessionId = data.conversationId;
         chatContainer.innerHTML = '';
         loadSessions();
@@ -196,8 +215,7 @@ function initWebSocket() {
   };
 
   ws.onclose = () => {
-    statusBadge.innerHTML = '<span class="status-dot" style="background:#ef4444"></span> <span>Disconnected</span>';
-    statusBadge.style.color = '#ef4444';
+    statusBadge.innerHTML = '<span class="status-dot" style="background:var(--accent-error)"></span> <span>Offline</span>';
     setTimeout(initWebSocket, 3000);
   };
 }
@@ -214,13 +232,13 @@ async function loadWorkspaceTree() {
         fileTreeEl.innerHTML = '';
         renderTreeNodes(data.tree, fileTreeEl);
       } else {
-        fileTreeEl.innerHTML = `<div class="loading-state" style="color:#ef4444">Server response: ${data.error || text}</div>`;
+        fileTreeEl.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Server response: ${data.error || text}</div>`;
       }
     } catch (_) {
-      fileTreeEl.innerHTML = `<div class="loading-state" style="color:#ef4444">Please restart node src/server.js to load file tree.</div>`;
+      fileTreeEl.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Please restart node src/server.js to load file tree.</div>`;
     }
   } catch (err) {
-    fileTreeEl.innerHTML = `<div class="loading-state" style="color:#ef4444">Error loading files: ${err.message}</div>`;
+    fileTreeEl.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Error loading files: ${err.message}</div>`;
   }
 }
 
@@ -281,10 +299,10 @@ async function openFileModal(relPath) {
       const parsed = parseMarkdown(`\`\`\`${data.language}\n${data.content}\n\`\`\``);
       modalFileBody.innerHTML = parsed;
     } else {
-      modalFileBody.innerHTML = `<div class="loading-state" style="color:#ef4444">Error: ${data.error}</div>`;
+      modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Error: ${data.error}</div>`;
     }
   } catch (err) {
-    modalFileBody.innerHTML = `<div class="loading-state" style="color:#ef4444">Failed to load file: ${err.message}</div>`;
+    modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Failed to load file: ${err.message}</div>`;
   }
 }
 
@@ -296,7 +314,6 @@ attachFilePromptBtn.addEventListener('click', () => {
   if (currentViewingFilePath) {
     promptInput.value = `${promptInput.value} @${currentViewingFilePath} `.trimStart();
     fileModal.style.display = 'none';
-    // Switch to Chat tab
     tabChatBtn.click();
     promptInput.focus();
   }
@@ -328,7 +345,7 @@ async function loadSessions() {
       }
     } else {
       const opt = document.createElement('option');
-      opt.textContent = 'No sessions available';
+      opt.textContent = 'No sessions';
       sessionSelect.appendChild(opt);
     }
   } catch (err) {
@@ -346,10 +363,10 @@ if (newChatBtn) {
       if (data.success) {
         activeSessionId = 'NEW_PENDING_SESSION';
         chatContainer.innerHTML = `
-          <div style="text-align: center; color: #a1a1aa; padding: 40px 20px; margin: auto;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">✨</div>
-            <div style="font-size: 1.15rem; font-weight: 600; color: #f4f4f5; margin-bottom: 6px;">New Conversation Started</div>
-            <div style="font-size: 0.88rem; color: #a1a1aa;">Send a prompt below to begin chatting with Antigravity Assistant.</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 36px 16px; margin: auto;">
+            <div style="font-size: 1.8rem; margin-bottom: 8px;">✨</div>
+            <div style="font-size: 1rem; font-weight: 600; color: var(--text-bright); margin-bottom: 4px;">New Conversation Started</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Send a prompt below to begin chatting with Antigravity.</div>
           </div>
         `;
       } else {
@@ -386,7 +403,7 @@ function renderMessage(role, text) {
 
   const meta = document.createElement('div');
   meta.className = 'meta';
-  meta.textContent = role === 'user' ? 'You (Phone)' : 'Antigravity IDE Assistant';
+  meta.textContent = role === 'user' ? 'You' : 'Antigravity Assistant';
 
   const body = document.createElement('div');
   body.className = 'message-body';
@@ -424,7 +441,7 @@ async function handleSend() {
 
   renderMessage('user', text || '[Attachment]');
   promptInput.value = '';
-  promptInput.style.height = '48px';
+  promptInput.style.height = '42px';
 
   const formData = new FormData();
   if (text) formData.append('text', text);
@@ -482,10 +499,11 @@ sessionSelect.addEventListener('change', async (e) => {
 
 // Auto-expand textarea
 promptInput.addEventListener('input', function () {
-  this.style.height = '48px';
-  this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+  this.style.height = '42px';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
 // Boot
+initTheme();
 initWebSocket();
 loadSessions();
