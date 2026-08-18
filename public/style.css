@@ -316,7 +316,7 @@ header {
   font-family: var(--font-ui);
   outline: none;
   flex: 1;
-  max-width: 170px;
+  max-width: 220px;
   cursor: pointer;
   transition: border-color var(--transition-fast);
 }
