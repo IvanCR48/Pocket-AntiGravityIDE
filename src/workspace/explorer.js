@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || path.resolve(__dirname, '..', '..');
+
 const DEFAULT_IGNORE = new Set([
   'node_modules',
   '.git',
@@ -15,11 +17,11 @@ const DEFAULT_IGNORE = new Set([
 
 /**
  * Recursively scans directory and builds a tree structure of workspace files.
- * @param {string} rootDir - Workspace root path
+ * @param {string} [rootDir=WORKSPACE_ROOT] - Workspace root path
  * @param {string} [currentDir=rootDir] - Current subfolder path
  * @returns {Array<Object>}
  */
-function getWorkspaceTree(rootDir, currentDir = rootDir) {
+function getWorkspaceTree(rootDir = WORKSPACE_ROOT, currentDir = rootDir) {
   const items = [];
 
   try {
@@ -35,7 +37,7 @@ function getWorkspaceTree(rootDir, currentDir = rootDir) {
         const children = getWorkspaceTree(rootDir, fullPath);
         items.push({
           name: entry.name,
-          path: relativePath,
+          relativePath: relativePath,
           type: 'directory',
           children
         });
@@ -47,7 +49,7 @@ function getWorkspaceTree(rootDir, currentDir = rootDir) {
 
         items.push({
           name: entry.name,
-          path: relativePath,
+          relativePath: relativePath,
           type: 'file',
           size
         });
@@ -65,12 +67,36 @@ function getWorkspaceTree(rootDir, currentDir = rootDir) {
 }
 
 /**
- * Reads file content safely for workspace file viewer.
- * @param {string} rootDir - Workspace root path
- * @param {string} relativePath - File relative path
- * @returns {{success: boolean, content?: string, size?: number, error?: string}}
+ * Maps file extension to highlight language.
+ * @param {string} filename
+ * @returns {string}
  */
-function getWorkspaceFileContent(rootDir, relativePath) {
+function detectLanguage(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  const map = {
+    '.js': 'javascript',
+    '.mjs': 'javascript',
+    '.json': 'json',
+    '.ps1': 'powershell',
+    '.cs': 'csharp',
+    '.html': 'html',
+    '.css': 'css',
+    '.md': 'markdown',
+    '.bat': 'bat',
+    '.cmd': 'bat',
+    '.py': 'python',
+    '.sh': 'bash'
+  };
+  return map[ext] || 'plaintext';
+}
+
+/**
+ * Reads file content safely for workspace file viewer.
+ * @param {string} [rootDir=WORKSPACE_ROOT] - Workspace root path
+ * @param {string} relativePath - File relative path
+ * @returns {{success: boolean, content?: string, size?: number, language?: string, error?: string}}
+ */
+function getWorkspaceFileContent(rootDir = WORKSPACE_ROOT, relativePath = '') {
   try {
     const fullPath = path.resolve(rootDir, relativePath);
     // Security check: ensure path is inside rootDir
@@ -88,13 +114,16 @@ function getWorkspaceFileContent(rootDir, relativePath) {
     }
 
     const content = fs.readFileSync(fullPath, 'utf8');
-    return { success: true, content, size: stat.size };
+    const language = detectLanguage(relativePath);
+
+    return { success: true, content, size: stat.size, language };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 
 module.exports = {
+  WORKSPACE_ROOT,
   getWorkspaceTree,
   getWorkspaceFileContent
 };
