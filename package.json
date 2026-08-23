@@ -1,8 +1,30 @@
 {
   "name": "pocket-antigravity",
   "version": "1.0.0",
-  "description": "Remote control and monitoring companion for Antigravity IDE",
+  "description": "Remote control, real-time monitoring, and workspace exploration companion for Antigravity IDE",
   "main": "src/server.js",
+  "author": "IvanCR48",
+  "license": "MIT",
+  "homepage": "https://github.com/IvanCR48/Pocket-AntiGravityIDE#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IvanCR48/Pocket-AntiGravityIDE.git"
+  },
+  "bugs": {
+    "url": "https://github.com/IvanCR48/Pocket-AntiGravityIDE/issues"
+  },
+  "keywords": [
+    "antigravity",
+    "antigravity-ide",
+    "ai-assistant",
+    "mobile-companion",
+    "remote-control",
+    "developer-tools",
+    "electron-automation",
+    "win32",
+    "websockets",
+    "live-streaming"
+  ],
   "scripts": {
     "start": "node src/server.js",
     "app": "start.bat",
