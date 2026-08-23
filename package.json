@@ -29,9 +29,6 @@
     "start": "node src/server.js",
     "app": "start.bat",
     "stop": "stop.bat",
-    "test:window": "node scripts/test-window-finder.js",
-    "test:text": "node scripts/test-inject-text.js",
-    "test:image": "node scripts/test-inject-image.js",
     "tunnel": "node scripts/start-tunnel.js"
   },
   "dependencies": {
