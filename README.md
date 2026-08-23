@@ -1,20 +1,36 @@
-# ✨ Pocket Antigravity IDE
+<div align="center">
 
-> Remote Control, Real-Time Monitoring & Workspace Exploration Companion for **Antigravity IDE**.
+  <img src="assets/banner.png" alt="Pocket Antigravity Banner" width="100%" style="border-radius: 8px;" />
 
-Pocket Antigravity is a mobile-first web app and remote injection server that allows you to control your desktop **Antigravity IDE** from your phone (iOS / Android) or any web browser globally over 4G/5G/Wi-Fi.
+  <br/><br/>
+
+  <img src="assets/logo.png" alt="Pocket Antigravity Logo" width="120" height="120" style="border-radius: 50%; box-shadow: 0 4px 20px rgba(92, 45, 145, 0.4);" />
+
+  # ✨ Pocket Antigravity IDE
+
+  **Control, prompt, and monitor your desktop Antigravity IDE remotely from your mobile phone with real-time streaming and zero plugins.**
+
+  <p align="center">
+    <a href="#-features"><img src="https://img.shields.io/badge/Platform-Windows%20Win32-0078D6?style=flat-square&logo=windows" alt="Windows"></a>
+    <a href="#-features"><img src="https://img.shields.io/badge/Interface-Mobile%20Web%20App-007acc?style=flat-square&logo=visualstudiocode" alt="VS Code UI"></a>
+    <a href="#-features"><img src="https://img.shields.io/badge/Tunnel-Cloudflare%20%2F%20Localtunnel-F38020?style=flat-square&logo=cloudflare" alt="Cloudflare"></a>
+    <a href="#-features"><img src="https://img.shields.io/badge/Real--Time-WebSockets%20%26%20JSONL-10b981?style=flat-square" alt="Real-Time"></a>
+    <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License"></a>
+  </p>
+
+</div>
 
 ---
 
-## 🎨 Features
+## 🎨 Features at a Glance
 
 - **📱 Remote Text & Multimedia Prompts**: Send text prompts, camera photos, and workspace file references from your phone straight into Antigravity IDE.
 - **⚡ Zero Plugin Installation**: Works out of the box using native Windows Win32 P/Invoke OS-level window handles & keyboard drivers.
-- **➕ New Chat Creation**: Create fresh conversation sessions in 1 tap directly from your phone (`➕ New Chat`).
-- **📁 Workspace File Explorer**: Browse your project files, view source code, and attach files with 1 tap (`@path/to/file`).
+- **➕ 1-Tap New Chat Creation**: Create fresh conversation sessions instantly directly from your phone (`➕ New Chat`).
+- **📁 Workspace File Explorer**: Browse your project files, view source code with syntax highlighting, and attach files with 1 tap (`@path/to/file`).
 - **💬 Real-Time Streaming**: Live WebSockets output stream reading `.jsonl` brain transcripts directly from disk.
-- **🌐 Global Access Tunnel**: Built-in Cloudflare & Localtunnel launcher for instant HTTPS access anywhere in the world.
-- **✨ Antigravity IDE Dark Theme**: Google Fonts (`Inter` & `Fira Code`), full GitHub-Flavored Markdown rendering, and 1-tap **Copy Code** buttons on all code snippets.
+- **🌐 Global Access Tunnel**: Built-in Cloudflare & Localtunnel launcher for instant encrypted HTTPS access anywhere in the world over 4G/5G/Wi-Fi.
+- **✨ VS Code Dark+ Theme**: Native VS Code Dark+ styling (`Inter` & `Fira Code`), complete Markdown rendering, light/dark theme toggle, and 1-tap **Copy Code** buttons.
 
 ---
 
@@ -81,7 +97,7 @@ To handle focus regardless of whether the user is typing in a code file, interac
 - **Key Deliverables**:
   - Assistant Persona Selector in the top navigation bar.
   - Persona Prompt Injector: Automatically prepending context/rules to user prompts.
-  - Custom Skills Trigger: Browser interface to explore and execute Antigravity custom skills and tools remotely.
+  - Custom Skills Trigger: Mobile browser interface to explore and execute Antigravity custom skills and tools remotely.
 
 ---
 
