@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-09-02
+
+### ⚡ Remote Code Diff Review & Actions
+- **Git Diff Engine (`src/workspace/diff.js`)**: Real-time git status, unified diffs parsing, and working tree statistics.
+- **Mobile Diff Viewer Modal**: Line-by-line colored diffs with red/green syntax highlighting and changed file selector tabs.
+- **Floating Changes Action Banner**: Non-intrusive floating card docked above the mobile input area that auto-detects modified files.
+- **One-Tap Actions**:
+  - `[Accept All]`: Injects native `Alt+Enter` in Antigravity IDE via Win32 P/Invoke and stages changes with `git add .`.
+  - `[Reject All]`: Discards all unstaged changes and deletes untracked files via `git restore .` and `git clean -fd`.
+
+---
+
 ## [1.1.0] - 2026-09-02
 
 ### 🔒 Security & Privacy
