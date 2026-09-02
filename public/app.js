@@ -2,8 +2,15 @@ let activeSessionId = null;
 let selectedFile = null;
 let currentViewingFilePath = null;
 let ws = null;
+let authToken = localStorage.getItem('pocket_auth_token') || '';
 
 // DOM Elements
+const authModal = document.getElementById('auth-modal');
+const authForm = document.getElementById('auth-form');
+const pinInput = document.getElementById('pin-input');
+const authError = document.getElementById('auth-error');
+const lockBtn = document.getElementById('lock-btn');
+
 const chatContainer = document.getElementById('chat-container');
 const filesContainer = document.getElementById('files-container');
 const fileTreeEl = document.getElementById('file-tree');
@@ -29,6 +36,115 @@ const modalFileTitle = document.getElementById('modal-file-title');
 const modalFileBody = document.getElementById('modal-file-body');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const attachFilePromptBtn = document.getElementById('attach-file-prompt-btn');
+
+// Authenticated Fetch Wrapper
+async function authFetch(url, options = {}) {
+  options.headers = options.headers || {};
+  if (authToken) {
+    if (options.headers instanceof Headers) {
+      options.headers.set('Authorization', `Bearer ${authToken}`);
+    } else {
+      options.headers['Authorization'] = `Bearer ${authToken}`;
+    }
+  }
+
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    showLockscreen();
+    throw new Error('Authentication required');
+  }
+  return res;
+}
+
+// Lockscreen Display Functions
+function showLockscreen() {
+  if (authModal) {
+    authModal.style.display = 'flex';
+    if (pinInput) {
+      pinInput.value = '';
+      pinInput.focus();
+    }
+  }
+  if (lockBtn) lockBtn.style.display = 'none';
+}
+
+function hideLockscreen() {
+  if (authModal) authModal.style.display = 'none';
+  if (lockBtn) lockBtn.style.display = 'inline-flex';
+}
+
+// Check Server Auth Status on Boot
+async function checkAuthStatus() {
+  try {
+    const res = await fetch('/api/auth/status');
+    const data = await res.json();
+    if (data.authRequired) {
+      if (!authToken) {
+        showLockscreen();
+        return false;
+      } else {
+        hideLockscreen();
+        return true;
+      }
+    } else {
+      hideLockscreen();
+      return true;
+    }
+  } catch (err) {
+    console.error('Failed to check auth status:', err);
+    return true;
+  }
+}
+
+// PIN Verification Handler
+if (authForm) {
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pin = pinInput.value.trim();
+    if (!pin) return;
+
+    if (authError) authError.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+
+      const data = await res.json();
+      if (data.success && data.token) {
+        authToken = data.token;
+        localStorage.setItem('pocket_auth_token', authToken);
+        hideLockscreen();
+        initWebSocket();
+        loadSessions();
+      } else {
+        if (authError) {
+          authError.textContent = data.error || 'Incorrect PIN. Try again.';
+          authError.style.display = 'block';
+        }
+        pinInput.value = '';
+        pinInput.focus();
+      }
+    } catch (err) {
+      if (authError) {
+        authError.textContent = 'Connection error. Please try again.';
+        authError.style.display = 'block';
+      }
+    }
+  });
+}
+
+// Manual Lock Button
+if (lockBtn) {
+  lockBtn.addEventListener('click', () => {
+    authToken = '';
+    localStorage.removeItem('pocket_auth_token');
+    if (ws) ws.close();
+    showLockscreen();
+  });
+}
 
 // Theme Switcher Logic
 function initTheme() {
@@ -181,8 +297,11 @@ refreshFilesBtn.addEventListener('click', loadWorkspaceTree);
 
 // 2. Initialize WebSocket Connection
 function initWebSocket() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  const tokenParam = authToken ? `?token=${encodeURIComponent(authToken)}` : '';
+  const wsUrl = `${protocol}//${window.location.host}/ws${tokenParam}`;
 
   ws = new WebSocket(wsUrl);
 
@@ -193,7 +312,9 @@ function initWebSocket() {
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
-      if (data.type === 'TRANSCRIPT_STEP') {
+      if (data.type === 'AUTH_REQUIRED') {
+        showLockscreen();
+      } else if (data.type === 'TRANSCRIPT_STEP') {
         if (activeSessionId === 'NEW_PENDING_SESSION') {
           activeSessionId = data.conversationId;
           chatContainer.innerHTML = '';
@@ -223,7 +344,7 @@ function initWebSocket() {
 async function loadWorkspaceTree() {
   fileTreeEl.innerHTML = '<div class="loading-state">Loading workspace files...</div>';
   try {
-    const res = await fetch('/api/workspace/tree');
+    const res = await authFetch('/api/workspace/tree');
     const text = await res.text();
     try {
       const data = JSON.parse(text);
@@ -292,7 +413,7 @@ async function openFileModal(relPath) {
   fileModal.style.display = 'flex';
 
   try {
-    const res = await fetch(`/api/workspace/file?path=${encodeURIComponent(relPath)}`);
+    const res = await authFetch(`/api/workspace/file?path=${encodeURIComponent(relPath)}`);
     const data = await res.json();
     if (data.success) {
       const parsed = parseMarkdown(`\`\`\`${data.language || 'plaintext'}\n${data.content}\n\`\`\``);
@@ -322,7 +443,7 @@ attachFilePromptBtn.addEventListener('click', () => {
 async function loadSessions() {
   if (activeSessionId === 'NEW_PENDING_SESSION') return;
   try {
-    const res = await fetch('/api/sessions');
+    const res = await authFetch('/api/sessions');
     const data = await res.json();
 
     sessionSelect.innerHTML = '';
@@ -357,7 +478,7 @@ if (newChatBtn) {
   newChatBtn.addEventListener('click', async () => {
     chatContainer.innerHTML = '<div class="loading-state">Starting new conversation...</div>';
     try {
-      const res = await fetch('/api/sessions/new', { method: 'POST' });
+      const res = await authFetch('/api/sessions/new', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         activeSessionId = 'NEW_PENDING_SESSION';
@@ -381,7 +502,7 @@ if (newChatBtn) {
 async function loadMessages(sessionId) {
   if (!sessionId || sessionId === 'NEW_PENDING_SESSION') return;
   try {
-    const res = await fetch(`/api/sessions/${sessionId}`);
+    const res = await authFetch(`/api/sessions/${sessionId}`);
     const data = await res.json();
 
     chatContainer.innerHTML = '';
@@ -452,7 +573,7 @@ async function handleSend() {
   previewArea.style.display = 'none';
 
   try {
-    const res = await fetch('/api/send', {
+    const res = await authFetch('/api/send', {
       method: 'POST',
       body: formData
     });
@@ -488,7 +609,7 @@ fileInput.addEventListener('change', (e) => {
 sessionSelect.addEventListener('change', async (e) => {
   const newId = e.target.value;
   activeSessionId = newId;
-  await fetch('/api/sessions/switch', {
+  await authFetch('/api/sessions/switch', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ conversationId: newId })
@@ -502,7 +623,11 @@ promptInput.addEventListener('input', function () {
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
-// Boot
+// Boot Sequence
 initTheme();
-initWebSocket();
-loadSessions();
+checkAuthStatus().then((isAuthed) => {
+  if (isAuthed) {
+    initWebSocket();
+    loadSessions();
+  }
+});

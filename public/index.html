@@ -14,6 +14,25 @@
 </head>
 <body>
 
+  <!-- Security PIN Lockscreen Modal -->
+  <div id="auth-modal" class="auth-overlay" style="display: none;">
+    <div class="auth-card">
+      <div class="auth-icon-wrapper">
+        <div class="auth-lock-icon">🔒</div>
+      </div>
+      <h2 class="auth-title">Pocket Antigravity</h2>
+      <p class="auth-subtitle">Enter your security PIN to connect</p>
+      
+      <form id="auth-form" class="auth-form">
+        <div class="pin-input-container">
+          <input type="password" id="pin-input" class="pin-input" placeholder="••••" maxlength="8" inputmode="numeric" autocomplete="current-password" autofocus required>
+        </div>
+        <div id="auth-error" class="auth-error-msg" style="display: none;">Incorrect PIN</div>
+        <button type="submit" id="auth-submit-btn" class="btn-auth-submit">Unlock Companion</button>
+      </form>
+    </div>
+  </div>
+
   <header>
     <div class="top-row">
       <div class="brand">
@@ -32,6 +51,7 @@
         <div id="chat-state-badge" class="status-badge" title="Live IDE Chat Focus State">
           <span class="status-dot" style="background:#858585"></span> <span>Chat: Checking...</span>
         </div>
+        <button id="lock-btn" class="theme-toggle-btn" title="Lock App" style="display: none;">🔒</button>
         <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Theme">🌙</button>
       </div>
     </div>
