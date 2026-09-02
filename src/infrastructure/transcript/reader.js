@@ -16,9 +16,7 @@ const DEFAULT_BRAIN_DIR = path.join(
  * @returns {Array<{id: string, mtime: Date, promptSnippet: string}>}
  */
 function listSessions(brainDir = DEFAULT_BRAIN_DIR) {
-  if (!fs.existsSync(brainDir)) {
-    return [];
-  }
+  if (!fs.existsSync(brainDir)) return [];
 
   try {
     const entries = fs.readdirSync(brainDir, { withFileTypes: true });
@@ -40,7 +38,6 @@ function listSessions(brainDir = DEFAULT_BRAIN_DIR) {
             const fileStats = fs.statSync(transcriptPath);
             if (fileStats.mtime > mtime) mtime = fileStats.mtime;
 
-            // Read first user input snippet
             const content = fs.readFileSync(transcriptPath, 'utf8');
             const lines = content.split('\n').filter(Boolean);
             for (const line of lines) {
@@ -65,7 +62,6 @@ function listSessions(brainDir = DEFAULT_BRAIN_DIR) {
       }
     }
 
-    // Sort newest session first
     sessions.sort((a, b) => b.mtime - a.mtime);
     return sessions;
   } catch (err) {
@@ -82,14 +78,10 @@ function listSessions(brainDir = DEFAULT_BRAIN_DIR) {
  */
 async function readTranscript(conversationId, brainDir = DEFAULT_BRAIN_DIR) {
   const transcriptPath = path.join(brainDir, conversationId, '.system_generated', 'logs', 'transcript.jsonl');
-
-  if (!fs.existsSync(transcriptPath)) {
-    return [];
-  }
+  if (!fs.existsSync(transcriptPath)) return [];
 
   const fileStream = fs.createReadStream(transcriptPath);
   const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
-
   const messages = [];
 
   for await (const line of rl) {

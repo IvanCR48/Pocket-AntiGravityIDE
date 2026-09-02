@@ -1,6 +1,6 @@
 const express = require('express');
-const { requireAuth } = require('../../../auth/auth');
-const { getActiveWorkspaceRoot } = require('../../../workspace/diff');
+const { requireAuth } = require('../../../infrastructure/security/pin-auth');
+const { getActiveWorkspaceRoot } = require('../../../infrastructure/workspace/resolver');
 
 function createChangesRoutes({ reviewChangesUseCase, onChangesBroadcast }) {
   const router = express.Router();

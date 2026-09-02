@@ -1,7 +1,7 @@
 const { IdeAutomationPort } = require('../../core/ports/ide-automation.port');
-const PromptQueue = require('../../injector/queue');
-const { getChatState } = require('../../injector/check-chat-state');
-const { triggerIdeAccept } = require('../../injector/diff-acceptor');
+const PromptQueue = require('./queue');
+const { getChatState } = require('./check-chat-state');
+const { triggerIdeAccept } = require('./diff-acceptor');
 
 /**
  * Windows Win32 OS automation adapter implementing IdeAutomationPort.

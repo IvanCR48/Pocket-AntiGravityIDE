@@ -1,7 +1,7 @@
 const express = require('express');
-const { requireAuth } = require('../../../auth/auth');
-const { getWorkspaceTree, getWorkspaceFileContent } = require('../../../workspace/explorer');
-const { getActiveWorkspaceRoot } = require('../../../workspace/diff');
+const { requireAuth } = require('../../../infrastructure/security/pin-auth');
+const { getWorkspaceTree, getWorkspaceFileContent } = require('../../../infrastructure/workspace/explorer');
+const { getActiveWorkspaceRoot } = require('../../../infrastructure/workspace/resolver');
 
 function createWorkspaceRoutes() {
   const router = express.Router();

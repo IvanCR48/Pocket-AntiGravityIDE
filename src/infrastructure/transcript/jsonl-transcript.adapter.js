@@ -1,7 +1,7 @@
 const { TranscriptPort } = require('../../core/ports/transcript.port');
 const { Session } = require('../../core/domain/session');
-const { listSessions, readTranscript, DEFAULT_BRAIN_DIR } = require('../../transcript/reader');
-const TranscriptWatcher = require('../../transcript/watcher');
+const { listSessions, readTranscript, DEFAULT_BRAIN_DIR } = require('./reader');
+const TranscriptWatcher = require('./watcher');
 
 class JsonlTranscriptAdapter extends TranscriptPort {
   constructor(brainDir = DEFAULT_BRAIN_DIR) {

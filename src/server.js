@@ -22,8 +22,8 @@ const { createWorkspaceRoutes } = require('./interfaces/http/routes/workspace.ro
 const { createPromptRoutes } = require('./interfaces/http/routes/prompt.routes');
 const { WebSocketServerHandler } = require('./interfaces/websockets/websocket-server');
 
-const { loadConfig } = require('./auth/auth');
-const { getActiveWorkspaceRoot } = require('./workspace/diff');
+const { loadConfig } = require('./infrastructure/security/pin-auth');
+const { getActiveWorkspaceRoot } = require('./infrastructure/workspace/resolver');
 
 // ----------------------------------------------------
 // 1. Dependency Injection Setup (Composition Root)

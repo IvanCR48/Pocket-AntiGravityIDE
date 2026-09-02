@@ -1,5 +1,5 @@
 const express = require('express');
-const { requireAuth } = require('../../../auth/auth');
+const { requireAuth } = require('../../../infrastructure/security/pin-auth');
 
 function createPromptRoutes({ sendPromptUseCase, ideAutomationPort, upload }) {
   const router = express.Router();

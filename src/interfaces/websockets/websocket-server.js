@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
-const { loadConfig, validateToken } = require('../../auth/auth');
-const { getActiveWorkspaceRoot } = require('../../workspace/diff');
+const { loadConfig, validateToken } = require('../../infrastructure/security/pin-auth');
+const { getActiveWorkspaceRoot } = require('../../infrastructure/workspace/resolver');
 
 class WebSocketServerHandler {
   constructor({ server, reviewChangesUseCase, ideAutomationPort, getActiveSessionId }) {
@@ -60,12 +60,10 @@ class WebSocketServerHandler {
         } catch (_) {}
       });
 
-      ws.on('close', () => {
-        // Client disconnected
-      });
+      ws.on('close', () => {});
     });
 
-    // Chat state broadcaster loop
+    // Chat state & diffs broadcaster loop
     setInterval(async () => {
       if (this.wss.clients.size > 0) {
         const state = await this.ideAutomation.getChatState();

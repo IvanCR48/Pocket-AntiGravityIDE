@@ -2,12 +2,12 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const CONFIG_PATH = path.join(__dirname, '..', '..', 'pocket.config.json');
+const CONFIG_PATH = path.join(__dirname, '..', '..', '..', 'pocket.config.json');
 const SERVER_SECRET = crypto.randomBytes(32).toString('hex');
 
 /**
- * Loads or reloads configuration from pocket.config.json or environment.
- * @returns {{pin: string, port: number}}
+ * Loads configuration from pocket.config.json or environment.
+ * @returns {{pin: string, port: number, workspaceRoot?: string}}
  */
 function loadConfig() {
   let config = { pin: '1234', port: 3000 };
@@ -29,7 +29,7 @@ function loadConfig() {
 }
 
 /**
- * Creates a signed auth token.
+ * Generates an HMAC signed token for authenticated sessions.
  * @param {string} pin
  * @returns {string}
  */
@@ -46,7 +46,6 @@ function generateToken(pin) {
  */
 function validateToken(token) {
   const config = loadConfig();
-  // If PIN is not configured or empty, access is open
   if (!config.pin) return true;
   if (!token) return false;
 
@@ -63,13 +62,11 @@ function validateToken(token) {
 }
 
 /**
- * Express middleware to protect API routes.
+ * Express middleware to enforce PIN authentication.
  */
 function requireAuth(req, res, next) {
   const config = loadConfig();
-  if (!config.pin) {
-    return next(); // Auth disabled
-  }
+  if (!config.pin) return next();
 
   const authHeader = req.headers['authorization'] || req.headers['x-pocket-token'] || req.query.token;
   let token = null;
@@ -82,9 +79,7 @@ function requireAuth(req, res, next) {
     }
   }
 
-  if (validateToken(token)) {
-    return next();
-  }
+  if (validateToken(token)) return next();
 
   return res.status(401).json({
     success: false,

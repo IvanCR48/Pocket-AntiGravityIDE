@@ -7,7 +7,7 @@ class TranscriptWatcher {
   /**
    * @param {Object} options
    * @param {string} [options.brainDir]
-   * @param {Function} [options.onNewStep] - Callback fired when a new log step is appended.
+   * @param {Function} [options.onNewStep]
    */
   constructor(options = {}) {
     this.brainDir = options.brainDir || DEFAULT_BRAIN_DIR;
@@ -17,10 +17,6 @@ class TranscriptWatcher {
     this.filePosition = 0;
   }
 
-  /**
-   * Starts watching active conversation log directory or a specific conversation ID.
-   * @param {string} [conversationId]
-   */
   start(conversationId = null) {
     if (conversationId) {
       this.activeConversationId = conversationId;
@@ -82,7 +78,7 @@ class TranscriptWatcher {
       stream.on('data', (chunk) => {
         const text = leftover + chunk;
         const lines = text.split('\n');
-        leftover = lines.pop(); // Keep last incomplete line
+        leftover = lines.pop();
 
         for (const line of lines) {
           if (!line.trim()) continue;

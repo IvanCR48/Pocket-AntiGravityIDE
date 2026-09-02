@@ -1,5 +1,5 @@
 const express = require('express');
-const { loadConfig, generateToken } = require('../../../auth/auth');
+const { loadConfig, generateToken } = require('../../../infrastructure/security/pin-auth');
 
 function createAuthRoutes() {
   const router = express.Router();
