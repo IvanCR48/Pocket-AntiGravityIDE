@@ -105,6 +105,48 @@
     </div>
   </div>
 
+  <!-- Workspace Diff Viewer Modal -->
+  <div id="diff-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content diff-modal-content">
+      <div class="modal-header">
+        <div class="diff-header-info">
+          <span class="modal-title">Review Workspace Changes</span>
+          <span id="diff-modal-stats" class="diff-modal-stats">(0 files)</span>
+        </div>
+        <button id="close-diff-modal-btn" class="btn-close">✕</button>
+      </div>
+
+      <!-- Changed Files Tab Selector -->
+      <div id="diff-files-bar" class="diff-files-bar">
+        <!-- File chips rendered dynamically -->
+      </div>
+
+      <!-- Formatted Diff Container -->
+      <div id="diff-body-container" class="diff-body-container">
+        <div class="loading-state">Loading diffs...</div>
+      </div>
+
+      <!-- Modal Footer with Accept / Reject Actions -->
+      <div class="diff-modal-footer">
+        <button id="modal-reject-btn" class="btn-diff-action danger">Reject All</button>
+        <button id="modal-accept-btn" class="btn-diff-action success">Accept All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Changes Action Banner -->
+  <div id="changes-banner" class="changes-banner" style="display: none;">
+    <div class="changes-banner-left">
+      <span class="changes-bolt">⚡</span>
+      <span id="changes-summary-text" class="changes-summary-text">0 files modified</span>
+    </div>
+    <div class="changes-banner-actions">
+      <button id="btn-review-diffs" class="btn-banner-action review">Review</button>
+      <button id="btn-reject-changes" class="btn-banner-action reject" title="Discard Changes">Reject</button>
+      <button id="btn-accept-changes" class="btn-banner-action accept" title="Accept Changes">Accept</button>
+    </div>
+  </div>
+
   <footer id="input-area">
     <div id="attachment-preview" class="attachment-preview">
       <span>📎 Attached:</span>

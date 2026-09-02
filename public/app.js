@@ -3,6 +3,8 @@ let selectedFile = null;
 let currentViewingFilePath = null;
 let ws = null;
 let authToken = localStorage.getItem('pocket_auth_token') || '';
+let currentChanges = null;
+let selectedDiffFileIndex = 0;
 
 // DOM Elements
 const authModal = document.getElementById('auth-modal');
@@ -30,12 +32,27 @@ const chatStateBadge = document.getElementById('chat-state-badge');
 const previewArea = document.getElementById('attachment-preview');
 const previewName = document.getElementById('preview-name');
 
-// Modal Elements
+// File Viewer Modal Elements
 const fileModal = document.getElementById('file-viewer-modal');
 const modalFileTitle = document.getElementById('modal-file-title');
 const modalFileBody = document.getElementById('modal-file-body');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const attachFilePromptBtn = document.getElementById('attach-file-prompt-btn');
+
+// Changes Banner & Diff Viewer Modal Elements
+const changesBanner = document.getElementById('changes-banner');
+const changesSummaryText = document.getElementById('changes-summary-text');
+const btnReviewDiffs = document.getElementById('btn-review-diffs');
+const btnRejectChanges = document.getElementById('btn-reject-changes');
+const btnAcceptChanges = document.getElementById('btn-accept-changes');
+
+const diffModal = document.getElementById('diff-modal');
+const closeDiffModalBtn = document.getElementById('close-diff-modal-btn');
+const diffModalStats = document.getElementById('diff-modal-stats');
+const diffFilesBar = document.getElementById('diff-files-bar');
+const diffBodyContainer = document.getElementById('diff-body-container');
+const modalRejectBtn = document.getElementById('modal-reject-btn');
+const modalAcceptBtn = document.getElementById('modal-accept-btn');
 
 // Authenticated Fetch Wrapper
 async function authFetch(url, options = {}) {
@@ -119,6 +136,7 @@ if (authForm) {
         hideLockscreen();
         initWebSocket();
         loadSessions();
+        checkChanges();
       } else {
         if (authError) {
           authError.textContent = data.error || 'Incorrect PIN. Try again.';
@@ -184,7 +202,6 @@ function parseMarkdown(text) {
   if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
     let html = marked.parse(text);
 
-    // Custom code block rendering with Copy button
     html = html.replace(/<pre><code class="(?:language-)?([^"]+)">([\s\S]*?)<\/code><\/pre>/gi, (match, lang, code) => {
       return `
         <div class="code-block-wrapper">
@@ -212,7 +229,6 @@ function parseMarkdown(text) {
     return html;
   }
 
-  // Basic regex fallback
   let escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -277,6 +293,145 @@ function updateChatStateBadge(state) {
   }
 }
 
+// ----------------------------------------------------
+// Changes Banner & Diff Viewer Logic
+// ----------------------------------------------------
+
+function updateChangesBanner(changes) {
+  currentChanges = changes;
+  if (!changesBanner) return;
+
+  if (changes && changes.hasChanges && changes.files && changes.files.length > 0) {
+    const count = changes.summary.files;
+    const add = changes.summary.additions;
+    const del = changes.summary.deletions;
+    changesSummaryText.textContent = `${count} file${count > 1 ? 's' : ''} modified (+${add} / -${del})`;
+    changesBanner.style.display = 'flex';
+  } else {
+    changesBanner.style.display = 'none';
+    if (diffModal) diffModal.style.display = 'none';
+  }
+}
+
+async function checkChanges() {
+  try {
+    const res = await authFetch('/api/changes');
+    const data = await res.json();
+    updateChangesBanner(data);
+  } catch (_) {}
+}
+
+function openDiffModal() {
+  if (!currentChanges || !currentChanges.files || currentChanges.files.length === 0) return;
+
+  selectedDiffFileIndex = 0;
+  diffModalStats.textContent = `(${currentChanges.summary.files} files • +${currentChanges.summary.additions} / -${currentChanges.summary.deletions})`;
+
+  renderDiffFileTabs();
+  renderSelectedFileDiff();
+  diffModal.style.display = 'flex';
+}
+
+function renderDiffFileTabs() {
+  diffFilesBar.innerHTML = '';
+  currentChanges.files.forEach((f, idx) => {
+    const chip = document.createElement('div');
+    chip.className = `diff-file-chip ${idx === selectedDiffFileIndex ? 'active' : ''}`;
+    chip.innerHTML = `
+      <span>📄 ${f.file}</span>
+      <span class="diff-file-chip-add">+${f.additions}</span>
+      <span class="diff-file-chip-del">-${f.deletions}</span>
+    `;
+    chip.addEventListener('click', () => {
+      selectedDiffFileIndex = idx;
+      renderDiffFileTabs();
+      renderSelectedFileDiff();
+    });
+    diffFilesBar.appendChild(chip);
+  });
+}
+
+function renderSelectedFileDiff() {
+  const fileData = currentChanges.files[selectedDiffFileIndex];
+  if (!fileData) return;
+
+  diffBodyContainer.innerHTML = '';
+  const lines = (fileData.diff || '').split('\n');
+
+  lines.forEach((line) => {
+    const lineEl = document.createElement('div');
+    lineEl.className = 'diff-line';
+
+    if (line.startsWith('+') && !line.startsWith('+++')) {
+      lineEl.classList.add('added');
+    } else if (line.startsWith('-') && !line.startsWith('---')) {
+      lineEl.classList.add('deleted');
+    } else if (line.startsWith('@@')) {
+      lineEl.classList.add('hunk-header');
+    }
+
+    lineEl.textContent = line || ' ';
+    diffBodyContainer.appendChild(lineEl);
+  });
+}
+
+async function handleAcceptChanges() {
+  if (!confirm('Accept all pending changes in Antigravity IDE?')) return;
+
+  modalAcceptBtn.textContent = 'Accepting...';
+  modalAcceptBtn.disabled = true;
+
+  try {
+    const res = await authFetch('/api/changes/accept', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      if (diffModal) diffModal.style.display = 'none';
+      if (changesBanner) changesBanner.style.display = 'none';
+      currentChanges = null;
+    } else {
+      alert(`Error accepting changes: ${data.error}`);
+    }
+  } catch (err) {
+    alert(`Failed to accept changes: ${err.message}`);
+  } finally {
+    modalAcceptBtn.textContent = 'Accept All';
+    modalAcceptBtn.disabled = false;
+  }
+}
+
+async function handleRejectChanges() {
+  if (!confirm('Discard and restore all changed files to their previous state?')) return;
+
+  modalRejectBtn.textContent = 'Rejecting...';
+  modalRejectBtn.disabled = true;
+
+  try {
+    const res = await authFetch('/api/changes/reject', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      if (diffModal) diffModal.style.display = 'none';
+      if (changesBanner) changesBanner.style.display = 'none';
+      currentChanges = null;
+    } else {
+      alert(`Error rejecting changes: ${data.error}`);
+    }
+  } catch (err) {
+    alert(`Failed to reject changes: ${err.message}`);
+  } finally {
+    modalRejectBtn.textContent = 'Reject All';
+    modalRejectBtn.disabled = false;
+  }
+}
+
+// Banner & Modal Listeners
+if (btnReviewDiffs) btnReviewDiffs.addEventListener('click', openDiffModal);
+if (btnRejectChanges) btnRejectChanges.addEventListener('click', handleRejectChanges);
+if (btnAcceptChanges) btnAcceptChanges.addEventListener('click', handleAcceptChanges);
+
+if (closeDiffModalBtn) closeDiffModalBtn.addEventListener('click', () => { diffModal.style.display = 'none'; });
+if (modalRejectBtn) modalRejectBtn.addEventListener('click', handleRejectChanges);
+if (modalAcceptBtn) modalAcceptBtn.addEventListener('click', handleAcceptChanges);
+
 // 1. Tab Switcher
 tabChatBtn.addEventListener('click', () => {
   tabChatBtn.classList.add('active');
@@ -314,6 +469,8 @@ function initWebSocket() {
       const data = JSON.parse(event.data);
       if (data.type === 'AUTH_REQUIRED') {
         showLockscreen();
+      } else if (data.type === 'CHANGES_UPDATED') {
+        updateChangesBanner(data.changes);
       } else if (data.type === 'TRANSCRIPT_STEP') {
         if (activeSessionId === 'NEW_PENDING_SESSION') {
           activeSessionId = data.conversationId;
@@ -328,6 +485,7 @@ function initWebSocket() {
         updateChatStateBadge(data.state);
       } else if (data.type === 'INIT') {
         if (data.chatState) updateChatStateBadge(data.chatState);
+        if (data.changes) updateChangesBanner(data.changes);
       }
     } catch (e) {
       console.error("WS Message Error:", e);
@@ -629,5 +787,6 @@ checkAuthStatus().then((isAuthed) => {
   if (isAuthed) {
     initWebSocket();
     loadSessions();
+    checkChanges();
   }
 });
