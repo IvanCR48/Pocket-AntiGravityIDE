@@ -1,131 +1,121 @@
 <div align="center">
 
-  <img src="assets/banner.png" alt="Pocket Antigravity Banner" width="100%" style="border-radius: 8px;" />
+  <img src="assets/banner.png" alt="Pocket Antigravity Demo" width="100%" style="border-radius: 8px;" />
 
   <br/><br/>
 
-  <img src="assets/logo.png" alt="Pocket Antigravity Logo" width="120" height="120" style="border-radius: 50%; box-shadow: 0 4px 20px rgba(92, 45, 145, 0.4);" />
+  <img src="assets/logo.png" alt="Pocket Antigravity Logo" width="100" height="100" style="border-radius: 50%;" />
 
-  # ✨ Pocket Antigravity IDE
+  # Pocket Antigravity IDE
 
-  **Control, prompt, and monitor your desktop Antigravity IDE remotely from your mobile phone with real-time streaming and zero plugins.**
+  **Controlás tu Antigravity IDE desde el celular sin instalar plugins ni configurar extensiones.**
 
   <p align="center">
-    <a href="#-features"><img src="https://img.shields.io/badge/Platform-Windows%20Win32-0078D6?style=flat-square&logo=windows" alt="Windows"></a>
-    <a href="#-features"><img src="https://img.shields.io/badge/Interface-Mobile%20Web%20App-007acc?style=flat-square&logo=visualstudiocode" alt="VS Code UI"></a>
-    <a href="#-features"><img src="https://img.shields.io/badge/Tunnel-Cloudflare%20%2F%20Localtunnel-F38020?style=flat-square&logo=cloudflare" alt="Cloudflare"></a>
-    <a href="#-features"><img src="https://img.shields.io/badge/Real--Time-WebSockets%20%26%20JSONL-10b981?style=flat-square" alt="Real-Time"></a>
-    <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License"></a>
+    <a href="#cómo-correrlo"><img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows" alt="Windows"></a>
+    <a href="#cómo-correrlo"><img src="https://img.shields.io/badge/Interface-Mobile%20Web-007acc?style=flat-square&logo=visualstudiocode" alt="VS Code UI"></a>
+    <a href="#cómo-correrlo"><img src="https://img.shields.io/badge/Access-HTTPS%20Tunnel-F38020?style=flat-square&logo=cloudflare" alt="Cloudflare"></a>
+    <a href="#licencia"><img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License"></a>
   </p>
 
 </div>
 
 ---
 
-## 🎨 Features at a Glance
+## Por qué existe esto
 
-- **📱 Remote Text & Multimedia Prompts**: Send text prompts, camera photos, and workspace file references from your phone straight into Antigravity IDE.
-- **⚡ Zero Plugin Installation**: Works out of the box using native Windows Win32 P/Invoke OS-level window handles & keyboard drivers.
-- **➕ 1-Tap New Chat Creation**: Create fresh conversation sessions instantly directly from your phone (`➕ New Chat`).
-- **📁 Workspace File Explorer**: Browse your project files, view source code with syntax highlighting, and attach files with 1 tap (`@path/to/file`).
-- **💬 Real-Time Streaming**: Live WebSockets output stream reading `.jsonl` brain transcripts directly from disk.
-- **🌐 Global Access Tunnel**: Built-in Cloudflare & Localtunnel launcher for instant encrypted HTTPS access anywhere in the world over 4G/5G/Wi-Fi.
-- **✨ VS Code Dark+ Theme**: Native VS Code Dark+ styling (`Inter` & `Fira Code`), complete Markdown rendering, light/dark theme toggle, and 1-tap **Copy Code** buttons.
-- **⚡ Remote Code Diff Review & Actions**: Review modified files with line-by-line colored diffs, and accept or reject changes with 1 tap (`[✅ Accept All]` / `[❌ Reject All]`).
-- **🔒 PIN Security Lockscreen**: Built-in 4-digit PIN authentication (`pocket.config.json`) protecting your remote tunnel from unauthorized access.
-- **⚡ [Complete Antigravity Shortcuts Guide](ANTIGRAVITY_SHORTCUTS.md)**: Full cheatsheet of native keybindings, diff review controls, slash commands, and Command Palette actions.
+Me pasaba todo el tiempo: le pedís al agente de Antigravity una refactorización grande o implementar un módulo completo, y el modelo se queda 2 o 3 minutos pensando, editando archivos y ejecutando comandos.
 
----
+En ese rato te levantás a buscar un café o vas al living, pero para ver si terminó, responderle una duda o aceptar los cambios que propone, tenés que volver a sentarte frente a la PC.
 
-## 🛠️ Deep Technical Architecture
+Armé **Pocket Antigravity** para resolver exactamente eso:
+* Poder revisar desde el celular los archivos que el agente modificó línea por línea con diffs en verde y rojo.
+* Tocar **Accept All** (`Alt + Enter`) o **Reject** directamente en la pantalla de tu teléfono.
+* Mandarle el siguiente prompt de voz, una foto de un error en pantalla o adjuntar un archivo del proyecto sin estar clavado al escritorio.
 
-Pocket Antigravity uses OS-level desktop automation and IPC patterns to interface with Antigravity IDE (Electron/Chromium architecture) without requiring external IDE extensions.
-
-```mermaid
-flowchart TD
-    Phone[📱 Phone / Mobile Web App] -->|HTTP POST / WebSockets| Server[Node.js Host Server :3000]
-    Tunnel[Cloudflare / Localtunnel] -.->|HTTPS Public URL| Phone
-    
-    subgraph Windows OS Automation
-        Server -->|1. Focus Release| FocusRel[Ctrl+1 / Focus First Editor Group]
-        Server -->|2. Win32 Window Restore| WinFinder[Win32 P/Invoke & AttachThreadInput]
-        Server -->|3. Activate Agent View| CmdPalette[Command Palette: Agent: Focus on Agent View]
-        Server -->|4. Input Focus Lock| InputLock[Ctrl+L Input Lock]
-        Server -->|5. Clipboard & Key Injection| KeySim[Win32 keybd_event - Ctrl+V & Enter]
-        WinFinder --> AntigravityIDE[Antigravity IDE Window]
-        CmdPalette --> AntigravityIDE
-        InputLock --> AntigravityIDE
-        KeySim --> AntigravityIDE
-    end
-
-    subgraph UI State Detection & Transcript Tailing
-        Server -->|UIAutomation 2-Pass Scan| StateDetector[check-chat-state.ps1]
-        AntigravityIDE -->|Appends JSONL steps| TranscriptLogs[AppData Brain Transcripts]
-        Watcher[Transcript Log Watcher] -->|Chokidar tailing| TranscriptLogs
-        Watcher -->|WebSocket Push| Server
-    end
-```
-
-### 1. Win32 Window Restoration & Focus (`Win32ClipboardInjector`)
-- **Process & Window Handle Resolution**: Uses `EnumWindows` and `GetClassName` to target the top-level Electron window with window class `Chrome_WidgetWin_1` and process matching `Antigravity`.
-- **Z-Order Restoration**: Performs 3-way thread input attachment via `AttachThreadInput(currentThread, targetThread, true)` combined with `OpenIcon(hwnd)` and `SetWindowPos(HWND_TOPMOST)` to reliably bring the IDE window to the foreground across OS focus restrictions.
-
-### 2. Focus Sequence Strategy
-To handle focus regardless of whether the user is typing in a code file, interacting with the terminal (`Ctrl+J`), or has the chat panel open/closed:
-
-1. **`Ctrl + 1` (Editor Focus Release)**: Safely releases focus from the Terminal (`xterm.js`), Output panels, or active widgets into the main editor group without opening/closing panels.
-2. **Command Palette Activation (`Ctrl+Shift+P` ➔ `"Agent: Focus on Agent View"`)**: Natively opens and activates the Agent View sidebar.
-3. **Input Focus Lock (`Ctrl + L`)**: Locks the blinking cursor directly into the prompt text input box.
-4. **Deliberate Timing Delay (`focusDelayMs = 500ms`)**: Ensures UI animations complete before injecting text.
-5. **Clipboard Paste & Submit (`Ctrl + V` + `Enter`)**: Pastes the prompt text from an STA thread clipboard worker and triggers the enter keystroke.
-
-### 3. UI State Detection (`check-chat-state.ps1`)
-- **2-Pass Chromium UIA Activation**: Chromium renderer accessibility trees are dormant by default. The detector issues a 1st-pass query (`FindFirst`) to wake up the accessibility tree, followed by a 2nd-pass query (`FindAll(ControlType.Edit)`) to read active controls.
-- **Filter Rules**: Excludes ActivityBar icons, Terminal controls (`xterm`), and Monaco editor code files (`.js`, `.html`, `.css`, etc.) to provide calibrated `FOCUSED`, `OPENED`, and `CLOSED` states.
-- **Output Sanitization**: Strips raw control characters and line breaks (`\r\n\t`) from window titles before emitting JSON to guarantee safe parsing.
+Todo esto **sin instalar extensiones propietarias**: corre sobre Windows de forma nativa interactuando directamente con el sistema operativo.
 
 ---
 
-## 🗺️ Roadmap & Upcoming Features (Issues Backlog)
+## Lo que podés hacer (Features clave)
 
-### ✅ Issue 1: Remote Code Diff Review & "Accept All / Reject All" Actions (Completed)
-- **Goal**: Allow mobile users to review modified files and accept or reject code changes generated by the Antigravity Agent directly from their phone.
-- **Key Deliverables**:
-  - `GET /api/changes`: Endpoint streaming working tree changes / git diffs (`git diff --stat`).
-  - Mobile Diff Viewer: Visual comparison showing additions and deletions in modified files.
-  - Remote Actions: `[✅ Accept All]` (invokes IDE accept command/shortcut) & `[❌ Reject All]` (discards unstaged changes via `git restore`).
-
-### 📌 Issue 2: Multi-Assistant & Custom Agent Persona Management
-- **Goal**: Enable switching between specialized assistant personas (e.g., Code Reviewer, Architect, Debugger) and configuring custom system instructions from the phone.
-- **Key Deliverables**:
-  - Assistant Persona Selector in the top navigation bar.
-  - Persona Prompt Injector: Automatically prepending context/rules to user prompts.
-  - Custom Skills Trigger: Mobile browser interface to explore and execute Antigravity custom skills and tools remotely.
+* **Control remoto total**: Enviás prompts de texto, capturas de cámara o referencias a archivos de tu proyecto con un toque (`@ruta/archivo`).
+* **Revisión y aprobación de Diffs**: Si el agente toca código, aparece un banner en tu teléfono con las estadísticas (`+14 / -3`). Abrís el visor con sintaxis a color y aceptás o descartás los cambios con 1 toque.
+* **Streaming en tiempo real**: Ves exactamente lo que el agente va pensando y respondiendo en vivo mediante WebSockets directos.
+* **Explorador de tu proyecto**: Navegás el árbol de archivos de tu repositorio y ves el código fuente con syntax highlighting desde el teléfono.
+* **Acceso global con PIN**: Genera un túnel HTTPS seguro (Cloudflare / Localtunnel) protegido por un PIN de 4 dígitos para que solo vos puedas entrar desde 4G, 5G o Wi-Fi.
 
 ---
 
-## 🚀 Quick Start Guide
+## Cómo correrlo (En 3 pasos)
 
-### 1. Installation
-Clone the repository and install dependencies:
+### 1. Clonar e instalar
 ```bash
 git clone https://github.com/IvanCR48/Pocket-AntiGravityIDE.git
 cd Pocket-AntiGravityIDE
 npm install
 ```
 
-### 2. Launch (1-Click)
-Double click **`start.bat`** (or run `npm run app` in your terminal).
+### 2. Iniciar (1 Click)
+Hacé doble click en **`start.bat`** (o ejecutá `npm run app`).
 
-This will launch:
-1. **Pocket Antigravity Server** on `http://localhost:3000`.
-2. **Global Access Tunnel** which generates your public HTTPS link and QR code for your phone.
+Esto abre el servidor local y levanta el túnel HTTPS. En la consola vas a ver la URL pública y un código QR para escanear con la cámara de tu celular.
 
-### 3. Stop
-Double click **`stop.bat`** (or run `npm run stop`).
+### 3. Conectar y desbloquear
+1. Abrí el enlace en Safari o Chrome en tu celular.
+2. Ingresá el PIN de seguridad (por defecto viene configurado en `1234` en `pocket.config.json`).
+3. ¡Listo! Ya estás conectado en vivo a tu Antigravity IDE.
+
+> Para detener todo cuando termines, hacé doble click en **`stop.bat`**.
 
 ---
 
-## 📄 License
+## Decisiones técnicas y limitaciones honestas
 
-MIT License - feel free to use, modify, and extend!
+* **¿Por qué Win32 P/Invoke en vez de un plugin de VS Code?**
+  Antigravity IDE no expone una API pública para inyectar texto en su ventana de chat. En vez de depender de parches que se rompan cada vez que el IDE se actualiza, usamos llamadas del sistema operativo (`AttachThreadInput`, `SetForegroundWindow` y `keybd_event`). El sistema localiza la ventana de Chromium/Electron y le pasa el foco de forma transparente.
+
+* **Lectura directa de transcripciones (`.jsonl`)**:
+  El servidor no hace scraping de pantalla. Lee incrementalmente los logs de razonamiento que el motor de Antigravity guarda en disco (`.gemini/antigravity-ide/brain/...`). Esto hace que el streaming al celular consuma prácticamente 0% de CPU.
+
+* **Limitaciones actuales**:
+  * Solo funciona en **Windows** (debido al inyector Win32).
+  * La ventana de Antigravity IDE debe estar abierta en la PC anfitriona.
+
+---
+
+## Arquitectura
+
+```mermaid
+flowchart TD
+    Phone[📱 Celular / Web App Móvil] -->|HTTP POST / WebSockets| Server[Node.js Host Server :3000]
+    Tunnel[Túnel HTTPS Cloudflare / Localtunnel] -.->|Acceso Remoto| Phone
+    Server -->|Inyección Win32 P/Invoke| IDE[Antigravity IDE Window]
+    Server -->|Lectura en tiempo real| Transcripts[Logs .jsonl en disco]
+    Server -->|Git Status / Diff / Restore| Repo[Repositorio local]
+    IDE -.->|Escribe razonamiento| Transcripts
+    Repo -.->|Genera diffs| Server
+```
+
+---
+
+## Atajos útiles
+
+Si querés conocer todos los atajos internos del IDE, creamos una guía completa en [ANTIGRAVITY_SHORTCUTS.md](ANTIGRAVITY_SHORTCUTS.md).
+
+---
+
+## Roadmap
+
+- [x] Control remoto de prompts (texto y fotos).
+- [x] Streaming de chat en vivo con WebSockets.
+- [x] Explorador de archivos del proyecto con visor de código.
+- [x] Protección por PIN de seguridad de 4 dígitos.
+- [x] Visor de diffs móvil con acciones remotas (Accept All / Reject All).
+- [ ] Selector de asistentes y personas (Code Reviewer, Arquitecto, Debugger).
+- [ ] Atajo de dictado por voz directo al prompt.
+
+---
+
+## Licencia
+
+MIT License — Creado por [IvanCR48](https://github.com/IvanCR48). Podés usarlo, modificarlo y compartirlo libremente.
