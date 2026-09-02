@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-09-02
+
+### 🏛️ Hexagonal & Clean Architecture Refactoring
+- **Core Domain Entities (`src/core/domain/`)**: Pure business models (`Prompt`, `Session`, `FileDiff`, `WorkspaceChanges`) independent of frameworks or OS.
+- **Application Use Cases (`src/core/usecases/`)**: Decoupled orchestrators (`SendPromptUseCase`, `ReviewChangesUseCase`, `ManageSessionsUseCase`).
+- **Port Contracts (`src/core/ports/`)**: Clean interfaces for `IdeAutomationPort`, `VcsPort`, and `TranscriptPort`.
+- **Secondary Infrastructure Adapters (`src/infrastructure/`)**:
+  - `Win32AutomationAdapter`: OS window management and P/Invoke keyboard synthesis.
+  - `GitAdapter`: Native Git CLI working tree inspection, staging, and rollback.
+  - `JsonlTranscriptAdapter`: Incremental `.jsonl` brain log tailing and session discovery.
+- **Primary Interface Adapters (`src/interfaces/`)**:
+  - Modular Express routes (`auth.routes.js`, `changes.routes.js`, `sessions.routes.js`, `workspace.routes.js`, `prompt.routes.js`).
+  - `WebSocketServerHandler`: Reactive streaming adapter.
+- **Composition Root (`src/server.js`)**: Pure dependency injection container and application bootstrap.
+
+---
+
 ## [1.2.0] - 2026-09-02
 
 ### ⚡ Remote Code Diff Review & Actions

@@ -83,17 +83,28 @@ Esto abre el servidor local y levanta el túnel HTTPS. En la consola vas a ver l
 
 ---
 
-## Arquitectura
+## Arquitectura Hexagonal (Ports & Adapters)
+
+El núcleo del sistema está desacoplado del sistema operativo y los frameworks:
 
 ```mermaid
 flowchart TD
-    Phone[📱 Celular / Web App Móvil] -->|HTTP POST / WebSockets| Server[Node.js Host Server :3000]
-    Tunnel[Túnel HTTPS Cloudflare / Localtunnel] -.->|Acceso Remoto| Phone
-    Server -->|Inyección Win32 P/Invoke| IDE[Antigravity IDE Window]
-    Server -->|Lectura en tiempo real| Transcripts[Logs .jsonl en disco]
-    Server -->|Git Status / Diff / Restore| Repo[Repositorio local]
-    IDE -.->|Escribe razonamiento| Transcripts
-    Repo -.->|Genera diffs| Server
+    subgraph DrivingAdapters ["Adaptadores Primarios (Entrada)"]
+        Phone[📱 Web App Móvil] -->|HTTP REST| Express[Express Controllers /api/*]
+        Phone -->|WebSockets| WS[WebSocket Stream Handler /ws]
+    end
+
+    subgraph CoreDomain ["Núcleo Hexagonal (Casos de Uso & Dominio)"]
+        Express --> UseCases[Casos de Uso: SendPrompt / ReviewChanges / ManageSessions]
+        WS --> UseCases
+        UseCases --> Ports["Puertos (Interfaces): IdeAutomationPort / VcsPort / TranscriptPort"]
+    end
+
+    subgraph DrivenAdapters ["Adaptadores Secundarios (Salida / Infraestructura)"]
+        Ports -->|IdeAutomationPort| Win32Adapter[Win32 Automation Adapter / P-Invoke]
+        Ports -->|VcsPort| GitAdapter[Git CLI Adapter / Status, Diff, Restore]
+        Ports -->|TranscriptPort| JsonlAdapter[JSONL Transcript Adapter / Disk Tail Watcher]
+    end
 ```
 
 ---
