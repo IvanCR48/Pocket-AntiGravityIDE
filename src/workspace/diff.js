@@ -211,13 +211,18 @@ async function rejectAllChanges() {
 }
 
 /**
- * Accepts all changes by staging them in git as a clean checkpoint.
+ * Accepts all changes by triggering Win32 Alt+Enter in Antigravity IDE and staging in git.
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 async function acceptAllChanges() {
   const rootDir = getActiveWorkspaceRoot();
 
   try {
+    try {
+      const { triggerIdeAccept } = require('../injector/diff-acceptor');
+      await triggerIdeAccept();
+    } catch (_) {}
+
     await runGit(['add', '.'], rootDir);
     console.log(`[DiffEngine] All changes accepted and staged in ${rootDir}`);
     return { success: true, message: 'All changes successfully accepted.' };
