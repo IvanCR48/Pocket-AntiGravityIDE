@@ -8,6 +8,7 @@ const fs = require('fs');
 const { listSessions, readTranscript, DEFAULT_BRAIN_DIR } = require('./transcript/reader');
 const TranscriptWatcher = require('./transcript/watcher');
 const { getWorkspaceTree, getWorkspaceFileContent, WORKSPACE_ROOT } = require('./workspace/explorer');
+const { getWorkspaceChanges, rejectAllChanges, acceptAllChanges, getActiveWorkspaceRoot } = require('./workspace/diff');
 const PromptQueue = require('./injector/queue');
 const { getChatState } = require('./injector/check-chat-state');
 const { loadConfig, generateToken, validateToken, requireAuth } = require('./auth/auth');
@@ -40,6 +41,24 @@ const upload = multer({ storage });
 // Active state
 let activeConversationId = null;
 
+/**
+ * Broadcasts latest workspace diffs to all authenticated WebSocket clients.
+ */
+async function broadcastChanges() {
+  try {
+    const changes = await getWorkspaceChanges();
+    const payload = JSON.stringify({
+      type: 'CHANGES_UPDATED',
+      changes
+    });
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN && client.isAuthenticated) {
+        client.send(payload);
+      }
+    });
+  } catch (_) {}
+}
+
 // Transcript Log Watcher
 const watcher = new TranscriptWatcher({
   brainDir: DEFAULT_BRAIN_DIR,
@@ -55,6 +74,11 @@ const watcher = new TranscriptWatcher({
         client.send(payload);
       }
     });
+
+    // Check if step modified files
+    if (stepData.type === 'PLANNER_RESPONSE' || stepData.status === 'DONE') {
+      setTimeout(broadcastChanges, 500);
+    }
   }
 });
 
@@ -85,7 +109,7 @@ setInterval(() => {
   }
 }, 1000);
 
-// Background chat state broadcaster
+// Background chat state & diffs broadcaster
 let currentChatState = { stateString: 'UNKNOWN', isChatOpen: false, isChatFocused: false };
 setInterval(async () => {
   if (wss.clients.size > 0) {
@@ -100,11 +124,14 @@ setInterval(async () => {
         client.send(payload);
       }
     });
+
+    // Poll git diffs every 3s
+    broadcastChanges();
   }
 }, 3000);
 
 // WebSocket Connection Handler
-wss.on('connection', (ws, req) => {
+wss.on('connection', async (ws, req) => {
   const config = loadConfig();
   
   // Check token from query param (e.g. /ws?token=...)
@@ -113,10 +140,12 @@ wss.on('connection', (ws, req) => {
 
   if (!config.pin || validateToken(token)) {
     ws.isAuthenticated = true;
+    const changes = await getWorkspaceChanges();
     ws.send(JSON.stringify({
       type: 'INIT',
       activeConversationId,
-      chatState: currentChatState
+      chatState: currentChatState,
+      changes
     }));
   } else {
     ws.isAuthenticated = false;
@@ -126,16 +155,18 @@ wss.on('connection', (ws, req) => {
     }));
   }
 
-  ws.on('message', (message) => {
+  ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
       if (data.type === 'AUTH') {
         if (validateToken(data.token)) {
           ws.isAuthenticated = true;
+          const changes = await getWorkspaceChanges();
           ws.send(JSON.stringify({
             type: 'INIT',
             activeConversationId,
-            chatState: currentChatState
+            chatState: currentChatState,
+            changes
           }));
         } else {
           ws.send(JSON.stringify({
@@ -276,8 +307,9 @@ app.post('/api/sessions/new', requireAuth, async (req, res) => {
 
 // 8. Get Workspace File Tree (Protected)
 app.get('/api/workspace/tree', requireAuth, (req, res) => {
-  const tree = getWorkspaceTree(WORKSPACE_ROOT);
-  res.json({ workspaceRoot: WORKSPACE_ROOT, tree });
+  const root = getActiveWorkspaceRoot();
+  const tree = getWorkspaceTree(root);
+  res.json({ workspaceRoot: root, tree });
 });
 
 // 9. Get Workspace File Content (Protected)
@@ -287,7 +319,8 @@ app.get('/api/workspace/file', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Missing path parameter.' });
   }
 
-  const fileData = getWorkspaceFileContent(WORKSPACE_ROOT, relPath);
+  const root = getActiveWorkspaceRoot();
+  const fileData = getWorkspaceFileContent(root, relPath);
   if (fileData.success) {
     res.json(fileData);
   } else {
@@ -295,14 +328,43 @@ app.get('/api/workspace/file', requireAuth, (req, res) => {
   }
 });
 
+// 10. Get Workspace Changes & Diffs (Protected)
+app.get('/api/changes', requireAuth, async (req, res) => {
+  const changes = await getWorkspaceChanges();
+  res.json(changes);
+});
+
+// 11. Accept All Changes (Protected)
+app.post('/api/changes/accept', requireAuth, async (req, res) => {
+  const result = await acceptAllChanges();
+  await broadcastChanges();
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(500).json(result);
+  }
+});
+
+// 12. Reject All Changes (Protected)
+app.post('/api/changes/reject', requireAuth, async (req, res) => {
+  const result = await rejectAllChanges();
+  await broadcastChanges();
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(500).json(result);
+  }
+});
+
 // Start Server
 const config = loadConfig();
 const PORT = process.env.PORT || config.port || 3000;
 server.listen(PORT, () => {
+  const root = getActiveWorkspaceRoot();
   console.log(`===================================================`);
   console.log(`🚀 Pocket Antigravity Server running on port ${PORT}`);
   console.log(`🔒 Security PIN: ${config.pin ? 'ENABLED (Configured in pocket.config.json)' : 'DISABLED (Open Access)'}`);
-  console.log(`📁 Workspace Root: ${WORKSPACE_ROOT}`);
+  console.log(`📁 Workspace Root: ${root}`);
   console.log(`🧠 Brain Transcripts: ${DEFAULT_BRAIN_DIR}`);
   console.log(`===================================================`);
 });
