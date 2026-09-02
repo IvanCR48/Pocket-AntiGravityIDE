@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-09-02
+
+### 🔒 Security & Privacy
+- **PIN Security Lockscreen**: Added 4-digit PIN authentication overlay (`pocket.config.json`) protecting public tunnels (Cloudflare/Localtunnel) against unauthorized access.
+- **HMAC Session Tokens**: Cryptographic token generation and verification for REST API endpoints and WebSockets stream.
+- **Manual Lock**: Added 1-tap lock button (`🔒`) in header status bar to clear local sessions.
+
+---
+
 ## [1.0.0] - 2026-08-22
 
 ### 🚀 Initial Public Release

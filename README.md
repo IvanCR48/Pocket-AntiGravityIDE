@@ -31,6 +31,7 @@
 - **💬 Real-Time Streaming**: Live WebSockets output stream reading `.jsonl` brain transcripts directly from disk.
 - **🌐 Global Access Tunnel**: Built-in Cloudflare & Localtunnel launcher for instant encrypted HTTPS access anywhere in the world over 4G/5G/Wi-Fi.
 - **✨ VS Code Dark+ Theme**: Native VS Code Dark+ styling (`Inter` & `Fira Code`), complete Markdown rendering, light/dark theme toggle, and 1-tap **Copy Code** buttons.
+- **🔒 PIN Security Lockscreen**: Built-in 4-digit PIN authentication (`pocket.config.json`) protecting your remote tunnel from unauthorized access.
 - **⚡ [Complete Antigravity Shortcuts Guide](ANTIGRAVITY_SHORTCUTS.md)**: Full cheatsheet of native keybindings, diff review controls, slash commands, and Command Palette actions.
 
 ---
