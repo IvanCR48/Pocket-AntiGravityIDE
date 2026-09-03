@@ -8,6 +8,7 @@ const multer = require('multer');
 const { SendPromptUseCase } = require('./core/usecases/send-prompt.usecase');
 const { ReviewChangesUseCase } = require('./core/usecases/review-changes.usecase');
 const { ManageSessionsUseCase } = require('./core/usecases/manage-sessions.usecase');
+const { ManagePersonasUseCase } = require('./core/usecases/manage-personas.usecase');
 
 // Outbound Infrastructure Adapters
 const { Win32AutomationAdapter } = require('./infrastructure/automation/win32-automation.adapter');
@@ -20,6 +21,7 @@ const { createChangesRoutes } = require('./interfaces/http/routes/changes.routes
 const { createSessionsRoutes } = require('./interfaces/http/routes/sessions.routes');
 const { createWorkspaceRoutes } = require('./interfaces/http/routes/workspace.routes');
 const { createPromptRoutes } = require('./interfaces/http/routes/prompt.routes');
+const { createPersonasRoutes } = require('./interfaces/http/routes/personas.routes');
 const { WebSocketServerHandler } = require('./interfaces/websockets/websocket-server');
 
 const { loadConfig } = require('./infrastructure/security/pin-auth');
@@ -32,7 +34,8 @@ const ideAutomationAdapter = new Win32AutomationAdapter();
 const vcsAdapter = new GitAdapter();
 const transcriptAdapter = new JsonlTranscriptAdapter(DEFAULT_BRAIN_DIR);
 
-const sendPromptUseCase = new SendPromptUseCase(ideAutomationAdapter);
+const managePersonasUseCase = new ManagePersonasUseCase();
+const sendPromptUseCase = new SendPromptUseCase(ideAutomationAdapter, managePersonasUseCase);
 const reviewChangesUseCase = new ReviewChangesUseCase({
   vcsPort: vcsAdapter,
   ideAutomationPort: ideAutomationAdapter
@@ -135,6 +138,7 @@ app.use('/api/sessions', createSessionsRoutes({
   }
 }));
 app.use('/api/workspace', createWorkspaceRoutes());
+app.use('/api/personas', createPersonasRoutes({ managePersonasUseCase }));
 app.use('/api', createPromptRoutes({
   sendPromptUseCase,
   ideAutomationPort: ideAutomationAdapter,

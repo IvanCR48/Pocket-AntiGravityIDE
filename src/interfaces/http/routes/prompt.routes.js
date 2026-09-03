@@ -9,6 +9,7 @@ function createPromptRoutes({ sendPromptUseCase, ideAutomationPort, upload }) {
     const filePath = req.body.filePath || '';
     const focusShortcut = req.body.focusShortcut || 'Auto';
     const method = req.body.method || 'keybd_event';
+    const personaId = req.body.personaId || 'pair';
     const uploadedImage = req.file ? req.file.path : null;
 
     const result = await sendPromptUseCase.execute({
@@ -17,6 +18,7 @@ function createPromptRoutes({ sendPromptUseCase, ideAutomationPort, upload }) {
       uploadedImage,
       focusShortcut,
       method,
+      personaId,
       newChat: false
     });
 
