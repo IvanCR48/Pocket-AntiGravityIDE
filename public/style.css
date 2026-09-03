@@ -1260,3 +1260,79 @@ textarea#prompt-input:focus {
 .btn-diff-action.success:hover {
   background: var(--accent-hover);
 }
+
+/* ==========================================================================
+   Assistant Persona Selector Chips & Badges
+   ========================================================================== */
+.persona-chips-bar {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-main);
+  border-top: 1px solid var(--border-color);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.persona-chips-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.persona-chip {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font-ui);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.persona-chip:hover {
+  background: var(--bg-hover);
+  color: var(--text-bright);
+}
+
+.persona-chip.active {
+  background: rgba(92, 45, 145, 0.25);
+  border-color: rgba(168, 85, 247, 0.7);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.active-persona-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px 2px 14px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.active-persona-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.persona-badge {
+  background: rgba(92, 45, 145, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: var(--text-bright);
+  padding: 1px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

@@ -5,6 +5,8 @@ let ws = null;
 let authToken = localStorage.getItem('pocket_auth_token') || '';
 let currentChanges = null;
 let selectedDiffFileIndex = 0;
+let selectedPersonaId = localStorage.getItem('pocket_persona_id') || 'pair';
+let availablePersonas = [];
 
 // DOM Elements
 const authModal = document.getElementById('auth-modal');
@@ -12,6 +14,8 @@ const authForm = document.getElementById('auth-form');
 const pinInput = document.getElementById('pin-input');
 const authError = document.getElementById('auth-error');
 const lockBtn = document.getElementById('lock-btn');
+const personaChipsBar = document.getElementById('persona-chips-bar');
+const personaBadge = document.getElementById('persona-badge');
 
 const chatContainer = document.getElementById('chat-container');
 const filesContainer = document.getElementById('files-container');
@@ -137,6 +141,7 @@ if (authForm) {
         initWebSocket();
         loadSessions();
         checkChanges();
+        loadPersonas();
       } else {
         if (authError) {
           authError.textContent = data.error || 'Incorrect PIN. Try again.';
@@ -162,6 +167,73 @@ if (lockBtn) {
     if (ws) ws.close();
     showLockscreen();
   });
+}
+
+// ==========================================================================
+// Assistant Persona Management
+// ==========================================================================
+async function loadPersonas() {
+  if (!personaChipsBar) return;
+  try {
+    const res = await authFetch('/api/personas');
+    const data = await res.json();
+    if (data.personas && Array.isArray(data.personas)) {
+      availablePersonas = data.personas;
+      renderPersonaChips();
+    }
+  } catch (err) {
+    console.warn('[Personas] Failed to load personas:', err.message);
+  }
+}
+
+function renderPersonaChips() {
+  if (!personaChipsBar) return;
+  personaChipsBar.innerHTML = '';
+
+  availablePersonas.forEach((p) => {
+    const chip = document.createElement('button');
+    chip.className = `persona-chip ${p.id === selectedPersonaId ? 'active' : ''}`;
+    chip.setAttribute('type', 'button');
+    chip.setAttribute('title', p.description || p.name);
+    chip.innerHTML = `<span>${p.icon || '🤖'}</span> <span>${p.name}</span>`;
+
+    chip.addEventListener('click', () => {
+      selectPersona(p.id);
+    });
+
+    personaChipsBar.appendChild(chip);
+  });
+
+  updatePersonaBadge();
+}
+
+function selectPersona(id) {
+  selectedPersonaId = id;
+  localStorage.setItem('pocket_persona_id', id);
+
+  if (personaChipsBar) {
+    const chips = personaChipsBar.querySelectorAll('.persona-chip');
+    chips.forEach((c, idx) => {
+      const p = availablePersonas[idx];
+      if (p && p.id === id) {
+        c.classList.add('active');
+      } else {
+        c.classList.remove('active');
+      }
+    });
+  }
+
+  updatePersonaBadge();
+}
+
+function updatePersonaBadge() {
+  if (!personaBadge) return;
+  const current = availablePersonas.find(p => p.id === selectedPersonaId);
+  if (current) {
+    personaBadge.innerHTML = `<span>${current.icon || '🤖'}</span> <span>${current.name}</span>`;
+  } else {
+    personaBadge.textContent = '⚡ Pair Dev';
+  }
 }
 
 // Theme Switcher Logic
@@ -724,6 +796,7 @@ async function handleSend() {
   const formData = new FormData();
   if (text) formData.append('text', text);
   if (selectedFile) formData.append('image', selectedFile);
+  formData.append('personaId', selectedPersonaId);
   formData.append('focusShortcut', 'Auto');
 
   // Clear preview
@@ -788,5 +861,6 @@ checkAuthStatus().then((isAuthed) => {
     initWebSocket();
     loadSessions();
     checkChanges();
+    loadPersonas();
   }
 });
