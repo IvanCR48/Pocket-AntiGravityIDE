@@ -39,6 +39,7 @@ Todo esto **sin instalar extensiones propietarias**: corre sobre Windows de form
 ## Lo que podés hacer (Features clave)
 
 * **Control remoto total**: Enviás prompts de texto, capturas de cámara o referencias a archivos de tu proyecto con un toque (`@ruta/archivo`).
+* **Selector de Personas y Roles**: Cambiá el comportamiento del asistente con chips deslizables (`⚡ Pair Dev`, `🔍 Reviewer`, `📐 Architect`, `🐛 Bug Hunter`, `🎯 Goal`, `💡 Teacher`) enriqueciendo tus prompts automáticamente sin redactar textos largos desde el celular.
 * **Revisión y aprobación de Diffs**: Si el agente toca código, aparece un banner en tu teléfono con las estadísticas (`+14 / -3`). Abrís el visor con sintaxis a color y aceptás o descartás los cambios con 1 toque.
 * **Streaming en tiempo real**: Ves exactamente lo que el agente va pensando y respondiendo en vivo mediante WebSockets directos.
 * **Explorador de tu proyecto**: Navegás el árbol de archivos de tu repositorio y ves el código fuente con syntax highlighting desde el teléfono.
@@ -122,7 +123,7 @@ Si querés conocer todos los atajos internos del IDE, creamos una guía completa
 - [x] Explorador de archivos del proyecto con visor de código.
 - [x] Protección por PIN de seguridad de 4 dígitos.
 - [x] Visor de diffs móvil con acciones remotas (Accept All / Reject All).
-- [ ] Selector de asistentes y personas (Code Reviewer, Arquitecto, Debugger).
+- [x] Selector de asistentes y personas (Code Reviewer, Arquitecto, Debugger).
 - [ ] Atajo de dictado por voz directo al prompt.
 
 ---

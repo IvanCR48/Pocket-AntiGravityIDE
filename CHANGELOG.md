@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-09-03
+
+### 🎭 Multi-Assistant & Custom Agent Personas (Issue #2)
+- **Persona Domain Entity (`src/core/domain/persona.js`)**: Encapsulates persona identity, role directives, slash commands, and prompt transformation logic.
+- **Curated Built-in Catalog**:
+  - `⚡ Pair Dev`: Direct, concise, production-ready coding.
+  - `🔍 Reviewer`: Strict code auditing for security, edge cases, and performance.
+  - `📐 Architect`: Focuses on clean/hexagonal architecture, interfaces, and separation of concerns.
+  - `🐛 Bug Hunter`: Systematic root-cause debugging, logging, and minimal fixes.
+  - `🎯 Autonomous Goal`: Prepends `/goal` command for autonomous completion of complex goals.
+  - `💡 Teacher`: Clear conceptual explanations, design tradeoffs, and mental models.
+- **Prompt Enrichment (`SendPromptUseCase`)**: Transparently enriches short mobile inputs with expert role directives before injecting into Antigravity IDE.
+- **Mobile Persona Selector UI**:
+  - Horizontal scrolling persona chips bar in mobile header.
+  - Active persona badge indicator docked above the mobile input field.
+  - Local preference persistence in `localStorage`.
+- **REST API (`src/interfaces/http/routes/personas.routes.js`)**: Endpoints to list personas (`GET /api/personas`) and persist custom agent configurations (`POST /api/personas/custom`).
+
+---
+
 ## [1.3.0] - 2026-09-02
 
 ### 🏛️ Hexagonal & Clean Architecture Refactoring
