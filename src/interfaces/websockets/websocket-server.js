@@ -9,7 +9,7 @@ class WebSocketServerHandler {
     this.ideAutomation = ideAutomationPort;
     this.getActiveSessionId = getActiveSessionId;
 
-    this.currentChatState = { stateString: 'UNKNOWN', isChatOpen: false, isChatFocused: false };
+    this.currentChatState = { stateString: 'READY', isChatOpen: true, isChatFocused: false };
 
     this.init();
   }
@@ -53,9 +53,22 @@ class WebSocketServerHandler {
             } else {
               ws.send(JSON.stringify({
                 type: 'AUTH_FAILED',
-                error: 'Invalid token.'
+                error: 'Invalid or expired token.'
               }));
             }
+          } else if (data.type === 'REFRESH_CHANGES' && ws.isAuthenticated) {
+            const changes = await this.reviewChanges.getChanges(getActiveWorkspaceRoot());
+            ws.send(JSON.stringify({
+              type: 'CHANGES_UPDATED',
+              changes
+            }));
+          } else if (data.type === 'CHECK_CHAT_STATE' && ws.isAuthenticated) {
+            const state = await this.ideAutomation.getChatState();
+            this.currentChatState = state;
+            ws.send(JSON.stringify({
+              type: 'CHAT_STATE_UPDATE',
+              state
+            }));
           }
         } catch (_) {}
       });
@@ -63,18 +76,12 @@ class WebSocketServerHandler {
       ws.on('close', () => {});
     });
 
-    // Chat state & diffs broadcaster loop
+    // Event-driven & gentle fallback: Broadcast changes periodically every 30s only when clients exist
     setInterval(async () => {
       if (this.wss.clients.size > 0) {
-        const state = await this.ideAutomation.getChatState();
-        this.currentChatState = state;
-        this.broadcast({
-          type: 'CHAT_STATE_UPDATE',
-          state
-        });
         this.broadcastChanges();
       }
-    }, 3000);
+    }, 30000);
   }
 
   broadcast(payload) {
