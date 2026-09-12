@@ -2,9 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
+const os = require('os');
+
 // Default Antigravity Brain Directory
 const DEFAULT_BRAIN_DIR = path.join(
-  process.env.USERPROFILE || process.env.HOME || 'C:\\Users\\Danie',
+  process.env.USERPROFILE || process.env.HOME || os.homedir(),
   '.gemini',
   'antigravity-ide',
   'brain'

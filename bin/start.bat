@@ -3,7 +3,7 @@ title Launch Pocket Antigravity
 cd /d "%~dp0.."
 
 echo ==================================================
-echo 🚀 Starting Pocket Antigravity Host & Tunnel...
+echo 🚀 Starting Pocket Antigravity Host and Tunnel...
 echo ==================================================
 echo.
 
@@ -20,7 +20,7 @@ echo ==================================================
 echo ✅ Pocket Antigravity is up and running!
 echo ==================================================
 echo 1. The Server window is running on http://localhost:3000
-echo 2. The Tunnel window will display your phone link & QR code.
+echo 2. The Tunnel window will display your phone link and QR code.
 echo.
-echo Press any key to close this launcher window (Server & Tunnel will stay running).
+echo Press any key to close this launcher window (Server and Tunnel will stay running).
 pause >nul

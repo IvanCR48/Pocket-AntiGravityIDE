@@ -3,7 +3,7 @@ title Stop Pocket Antigravity
 cd /d "%~dp0.."
 
 echo ==================================================
-echo 🛑 Stopping Pocket Antigravity Server & Tunnel...
+echo 🛑 Stopping Pocket Antigravity Server and Tunnel...
 echo ==================================================
 
 :: 1. Safely terminate only the process listening on Pocket Antigravity port (default 3000)
