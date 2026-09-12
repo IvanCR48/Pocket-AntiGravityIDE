@@ -14,6 +14,8 @@ const { ManagePersonasUseCase } = require('./core/usecases/manage-personas.useca
 const { Win32AutomationAdapter } = require('./infrastructure/automation/win32-automation.adapter');
 const { GitAdapter } = require('./infrastructure/vcs/git.adapter');
 const { JsonlTranscriptAdapter, DEFAULT_BRAIN_DIR } = require('./infrastructure/transcript/jsonl-transcript.adapter');
+const { SystemDoctor } = require('./infrastructure/system/doctor');
+const { TunnelManager } = require('./infrastructure/system/tunnel-manager');
 
 // Inbound Primary Interfaces
 const { createAuthRoutes } = require('./interfaces/http/routes/auth.routes');
@@ -22,6 +24,7 @@ const { createSessionsRoutes } = require('./interfaces/http/routes/sessions.rout
 const { createWorkspaceRoutes } = require('./interfaces/http/routes/workspace.routes');
 const { createPromptRoutes } = require('./interfaces/http/routes/prompt.routes');
 const { createPersonasRoutes } = require('./interfaces/http/routes/personas.routes');
+const { createSystemRoutes } = require('./interfaces/http/routes/system.routes');
 const { WebSocketServerHandler } = require('./interfaces/websockets/websocket-server');
 
 const { loadConfig } = require('./infrastructure/security/pin-auth');
@@ -33,6 +36,8 @@ const { getActiveWorkspaceRoot } = require('./infrastructure/workspace/resolver'
 const ideAutomationAdapter = new Win32AutomationAdapter();
 const vcsAdapter = new GitAdapter();
 const transcriptAdapter = new JsonlTranscriptAdapter(DEFAULT_BRAIN_DIR);
+const systemDoctor = new SystemDoctor();
+const tunnelManager = new TunnelManager();
 
 const managePersonasUseCase = new ManagePersonasUseCase();
 const sendPromptUseCase = new SendPromptUseCase(ideAutomationAdapter, managePersonasUseCase);
@@ -144,18 +149,34 @@ app.use('/api', createPromptRoutes({
   ideAutomationPort: ideAutomationAdapter,
   upload
 }));
+app.use('/api/system', createSystemRoutes({
+  systemDoctor,
+  tunnelManager,
+  getActiveSessionId: () => activeConversationId,
+  getClientCount: () => wsHandler.getClientCount()
+}));
+
+// Dashboard Redirect
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
+});
 
 // ----------------------------------------------------
 // 4. Start Server
 // ----------------------------------------------------
 const config = loadConfig();
+if (config.preventSleep) {
+  systemDoctor.setKeepAwake(true);
+}
+
 const PORT = process.env.PORT || config.port || 3000;
 server.listen(PORT, () => {
   const root = getActiveWorkspaceRoot();
   console.log(`===================================================`);
   console.log(`🚀 Pocket Antigravity [Hexagonal Architecture] Port: ${PORT}`);
-  console.log(`🔒 Security PIN: ${config.pin ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`🎛️  Host Dashboard:  http://localhost:${PORT}/dashboard`);
+  console.log(`🔒 Security PIN:   ${config.pin ? 'ENABLED' : 'DISABLED'}`);
   console.log(`📁 Active Workspace: ${root}`);
-  console.log(`🧠 Brain Logs: ${DEFAULT_BRAIN_DIR}`);
+  console.log(`🧠 Brain Logs:      ${DEFAULT_BRAIN_DIR}`);
   console.log(`===================================================`);
 });

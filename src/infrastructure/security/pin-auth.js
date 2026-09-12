@@ -139,8 +139,29 @@ function validateToken(token) {
   }
 }
 
+/**
+ * Persists updated configuration back to pocket.config.json.
+ * @param {object} updates
+ * @returns {object} Updated config
+ */
+function saveConfig(updates) {
+  const current = loadConfig();
+  const next = { ...current, ...updates };
+  // Never save empty strings for PIN
+  if (updates.pin !== undefined) {
+    next.pin = String(updates.pin).trim();
+  }
+  if (updates.port !== undefined) {
+    const p = parseInt(updates.port, 10);
+    if (!isNaN(p) && p > 0 && p < 65536) next.port = p;
+  }
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(next, null, 2), 'utf8');
+  return next;
+}
+
 module.exports = {
   loadConfig,
+  saveConfig,
   generateToken,
   validateToken,
   recordFailedAttempt,
@@ -150,3 +171,4 @@ module.exports = {
   MAX_TOKEN_AGE_MS,
   MAX_FAILED_ATTEMPTS
 };
+

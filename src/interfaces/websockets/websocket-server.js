@@ -102,6 +102,11 @@ class WebSocketServerHandler {
       });
     } catch (_) {}
   }
+
+  getClientCount() {
+    return this.wss && this.wss.clients ? this.wss.clients.size : 0;
+  }
 }
 
 module.exports = { WebSocketServerHandler };
+
