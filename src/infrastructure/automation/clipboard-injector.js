@@ -1,7 +1,7 @@
 const { execFile } = require('child_process');
 const path = require('path');
 
-const PS_SCRIPT_PATH = path.join(__dirname, 'clipboard-injector.ps1');
+const PS_SCRIPT_PATH = path.join(__dirname, 'native', 'clipboard-injector.ps1');
 
 /**
  * Focuses Antigravity IDE, copies prompt text to system clipboard, pastes (Ctrl+V) and submits (Enter).

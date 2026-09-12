@@ -1,7 +1,7 @@
 const { execFile } = require('child_process');
 const path = require('path');
 
-const PS_SCRIPT_PATH = path.join(__dirname, 'check-chat-state.ps1');
+const PS_SCRIPT_PATH = path.join(__dirname, 'native', 'check-chat-state.ps1');
 
 /**
  * Detects whether Antigravity IDE Chat Panel is FOCUSED, OPENED, or CLOSED.

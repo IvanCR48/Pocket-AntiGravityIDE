@@ -349,8 +349,12 @@ public class Win32ClipboardInjector {
             Thread.Sleep(focusDelayMs);
 
             if (!string.IsNullOrEmpty(text)) {
+                string previousClipboard = null;
                 Thread staThreadText = new Thread(() => {
                     try {
+                        if (Clipboard.ContainsText()) {
+                            previousClipboard = Clipboard.GetText();
+                        }
                         Clipboard.SetText(text);
                     } catch (Exception ex) {
                         res.Error = "Clipboard error: " + ex.Message;
@@ -376,6 +380,18 @@ public class Win32ClipboardInjector {
                     } else {
                         SendEnterKeybdEvent();
                     }
+                }
+
+                // Restore previous clipboard content if any existed
+                if (!string.IsNullOrEmpty(previousClipboard)) {
+                    Thread staRestore = new Thread(() => {
+                        try {
+                            Clipboard.SetText(previousClipboard);
+                        } catch {}
+                    });
+                    staRestore.SetApartmentState(ApartmentState.STA);
+                    staRestore.Start();
+                    staRestore.Join();
                 }
             }
 

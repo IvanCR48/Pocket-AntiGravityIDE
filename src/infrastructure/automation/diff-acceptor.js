@@ -7,7 +7,7 @@ const path = require('path');
  */
 function triggerIdeAccept() {
   return new Promise((resolve) => {
-    const psScript = path.join(__dirname, 'diff-acceptor.ps1');
+    const psScript = path.join(__dirname, 'native', 'diff-acceptor.ps1');
     const child = spawn('powershell.exe', [
       '-NoProfile',
       '-ExecutionPolicy', 'Bypass',

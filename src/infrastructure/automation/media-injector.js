@@ -1,7 +1,7 @@
 const { execFile } = require('child_process');
 const path = require('path');
 
-const PS_SCRIPT_PATH = path.join(__dirname, 'media-injector.ps1');
+const PS_SCRIPT_PATH = path.join(__dirname, 'native', 'media-injector.ps1');
 
 /**
  * Focuses Antigravity IDE, places image, file, or text onto clipboard, pastes (Ctrl+V) and submits (Enter).
