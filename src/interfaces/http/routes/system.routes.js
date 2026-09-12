@@ -1,4 +1,5 @@
 const express = require('express');
+const QRCode = require('qrcode');
 const { loadConfig, saveConfig } = require('../../../infrastructure/security/pin-auth');
 
 /**
@@ -7,6 +8,25 @@ const { loadConfig, saveConfig } = require('../../../infrastructure/security/pin
  */
 function createSystemRoutes({ systemDoctor, tunnelManager, getActiveSessionId, getClientCount }) {
   const router = express.Router();
+
+  // Dynamic SVG QR code endpoint
+  router.get('/qr', async (req, res) => {
+    try {
+      const text = req.query.text;
+      if (!text) return res.status(400).send('Missing text query parameter');
+      const svg = await QRCode.toString(text, {
+        type: 'svg',
+        margin: 1,
+        color: {
+          dark: '#ffffff',
+          light: '#00000000'
+        }
+      });
+      res.type('image/svg+xml').send(svg);
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  });
 
   // Diagnostics & Doctor
   router.get('/doctor', async (req, res) => {

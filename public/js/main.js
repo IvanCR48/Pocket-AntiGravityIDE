@@ -10,6 +10,7 @@ import {
 } from './views/chat-view.js';
 import { initDiffView, checkChanges, updateChangesBanner } from './views/diff-view.js';
 import { initFilesView, loadWorkspaceTree } from './views/files-view.js';
+import { PwaManager } from './pwa.js';
 
 // DOM Elements
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -98,8 +99,12 @@ initFilesView();
 
 // Boot Sequence
 initTheme();
+const pwa = new PwaManager();
+pwa.init();
+
 checkAuthStatus().then((isAuthed) => {
   if (isAuthed) {
     startApp();
   }
 });
+
