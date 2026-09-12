@@ -57,7 +57,7 @@ npm install
 ```
 
 ### 2. Iniciar (1 Click)
-Hacé doble click en **`start.bat`** (o ejecutá `npm run app`).
+Hacé doble click en **`bin/start.bat`** (o ejecutá `npm run app`).
 
 Esto abre el servidor local y levanta el túnel HTTPS. En la consola vas a ver la URL pública y un código QR para escanear con la cámara de tu celular.
 
@@ -66,7 +66,7 @@ Esto abre el servidor local y levanta el túnel HTTPS. En la consola vas a ver l
 2. Ingresá el PIN de seguridad (por defecto viene configurado en `1234` en `pocket.config.json`).
 3. ¡Listo! Ya estás conectado en vivo a tu Antigravity IDE.
 
-> Para detener todo cuando termines, hacé doble click en **`stop.bat`**.
+> Para detener todo cuando termines, hacé doble click en **`bin/stop.bat`** (o ejecutá `npm run stop`).
 
 ---
 

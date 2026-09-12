@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-09-12
+
+### 🏛️ Architecture Refinement, Security Hardening & Performance
+- **Folder Structure Refinement**:
+  - Consolidated all launcher and access scripts into `bin/` (`bin/start.bat`, `bin/stop.bat`, `bin/start-tunnel.js`).
+  - Safe `stop.bat` targets specifically the PID on port 3000 and matching titled windows, preventing collateral termination of other local Node.js processes.
+  - Isolated native Win32 PowerShell automation scripts into `src/infrastructure/automation/native/`.
+- **Security & Data Safety Hardening**:
+  - Enforced 24-hour token expiration and timing-safe cryptographic verification in `pin-auth.js`.
+  - Added in-memory rate-limiting lockout (5 failed PIN attempts locks authentication for 5 minutes).
+  - Decoupled Express middleware into `src/interfaces/http/middleware/auth.middleware.js` to eliminate leaky infrastructure abstractions.
+  - Replaced destructive `git clean -fd` in `git.adapter.js` with non-destructive stash backup (`git stash push --include-untracked`) before restoring.
+  - Preserved existing desktop clipboard contents in `clipboard-injector.ps1` before and after prompt paste.
+- **Performance Optimization**:
+  - Eliminated continuous 3-second UIAutomation tree crawling in `websocket-server.js` in favor of event-driven and on-demand updates.
+- **Browser-Native Frontend Modularization**:
+  - Decomposed monolithic 867-line `app.js` into focused ES modules under `public/js/` (`auth.js`, `ws-client.js`, `views/chat-view.js`, `views/diff-view.js`, `views/files-view.js`, `main.js`) with zero build dependencies.
+- **Automated Test Suite (`tests/`)**:
+  - Added unit test suite for auth security, persona transformations, and git diff parsing using Node's native test runner (`node --test`).
+
+---
+
 ## [1.4.0] - 2026-09-03
 
 ### 🎭 Multi-Assistant & Custom Agent Personas (Issue #2)
