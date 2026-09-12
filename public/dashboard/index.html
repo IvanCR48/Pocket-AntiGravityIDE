@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pocket Antigravity — Host Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="icon" type="image/png" href="/assets/logo.png">
+</head>
+<body class="theme-discord">
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="/assets/logo.png" alt="Logo" class="brand-icon">
+        <div class="brand-text">
+          <span class="brand-title">Pocket Antigravity</span>
+          <span class="brand-subtitle">Host Control Center</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="doctor">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <span>System Doctor</span>
+          <span class="nav-badge" id="doctor-badge">Checking</span>
+        </button>
+
+        <button class="nav-item" data-tab="network">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span>Network & Access</span>
+        </button>
+
+        <button class="nav-item" data-tab="settings">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>Host Settings</span>
+        </button>
+
+        <button class="nav-item" data-tab="status">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          <span>Live Monitor</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="server-pill">
+          <span class="status-dot pulse-green"></span>
+          <span class="pill-text" id="footer-server-status">Host: Port 3000</span>
+        </div>
+        <a href="/" target="_blank" class="sidebar-link-btn" title="Open Phone Web App">
+          <span>Open Web App</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header Bar -->
+      <header class="topbar">
+        <div class="topbar-title-group">
+          <h1 id="page-title">System Doctor & Dependencies</h1>
+          <p class="topbar-desc" id="page-desc">Automated health inspection of your local development environment</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="refresh-all-btn" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: System Doctor -->
+      <section class="tab-pane active" id="tab-doctor">
+        <div class="doctor-grid">
+          <!-- Node.js Card -->
+          <div class="doctor-card" id="card-node">
+            <div class="doctor-card-header">
+              <div class="card-icon node-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 7.2v9.6l9 5.2 9-5.2V7.2L12 2zm0 2.3l6.7 3.9L12 12.1 5.3 8.2 12 4.3zm-7 5.1l6 3.5v7.7l-6-3.5V9.4zm8 11.2v-7.7l6-3.5v7.7l-6 3.5z"/></svg>
+              </div>
+              <div class="card-meta">
+                <span class="card-title">Node.js Runtime</span>
+                <span class="card-ver" id="node-version">Detecting...</span>
+              </div>
+              <span class="status-badge" id="node-badge">...</span>
+            </div>
+            <p class="card-desc">Required to run the Pocket Antigravity backend server.</p>
+            <div class="card-footer">
+              <span class="footer-label">Requirement:</span>
+              <span class="footer-val">Node >= 18.0.0</span>
+            </div>
+          </div>
+
+          <!-- Git Card -->
+          <div class="doctor-card" id="card-git">
+            <div class="doctor-card-header">
+              <div class="card-icon git-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 10.9L13.1 2.4c-.6-.6-1.5-.6-2.1 0L8.9 4.5l3.2 3.2c.4-.1.9 0 1.2.3.4.4.5 1 .3 1.5l3.1 3.1c.5-.2 1.1-.1 1.5.3.6.6.6 1.5 0 2.1-.6.6-1.5.6-2.1 0-.4-.4-.5-1-.3-1.5l-3-3v4.4c.3.3.4.7.3 1.1 0 .8-.7 1.5-1.5 1.5s-1.5-.7-1.5-1.5c0-.4.1-.8.4-1.1V9.9c-.3-.3-.4-.7-.3-1.1 0-.5.3-.9.7-1.2L7 4.7 2.4 9.3c-.6.6-.6 1.5 0 2.1l8.5 8.5c.6.6 1.5.6 2.1 0l8.6-8.6c.6-.6.6-1.5 0-2.1z"/></svg>
+              </div>
+              <div class="card-meta">
+                <span class="card-title">Git Version Control</span>
+                <span class="card-ver" id="git-version">Detecting...</span>
+              </div>
+              <span class="status-badge" id="git-badge">...</span>
+            </div>
+            <p class="card-desc">Powers diff inspection, hunk accepting, and atomic rollback on your mobile screen.</p>
+            <div class="card-footer">
+              <span class="footer-label">Status:</span>
+              <span class="footer-val" id="git-status-text">Checking CLI...</span>
+            </div>
+          </div>
+
+          <!-- PowerShell Card -->
+          <div class="doctor-card" id="card-ps">
+            <div class="doctor-card-header">
+              <div class="card-icon ps-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              </div>
+              <div class="card-meta">
+                <span class="card-title">Windows PowerShell</span>
+                <span class="card-ver" id="ps-version">Detecting...</span>
+              </div>
+              <span class="status-badge" id="ps-badge">...</span>
+            </div>
+            <p class="card-desc">Injects prompts directly into Antigravity IDE without focus disruption.</p>
+            <div class="card-footer">
+              <span class="footer-label">Engine:</span>
+              <span class="footer-val" id="ps-status-text">PowerShell Automation</span>
+            </div>
+          </div>
+
+          <!-- Antigravity IDE Card -->
+          <div class="doctor-card" id="card-ide">
+            <div class="doctor-card-header">
+              <div class="card-icon ide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+              </div>
+              <div class="card-meta">
+                <span class="card-title">Antigravity IDE</span>
+                <span class="card-ver" id="ide-status-label">Detecting...</span>
+              </div>
+              <span class="status-badge" id="ide-badge">...</span>
+            </div>
+            <p class="card-desc" id="ide-desc">Detects if the Antigravity desktop IDE application is active and reachable.</p>
+            <div class="card-footer">
+              <span class="footer-label">Process State:</span>
+              <span class="footer-val" id="ide-status-text">Scanning processes...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="doctor-summary-banner">
+          <div class="summary-icon">💡</div>
+          <div class="summary-text">
+            <strong>System Health Score: <span id="health-score">Evaluating...</span></strong>
+            <p id="health-recommendation">Your environment is being verified. Everything is configured to pair seamlessly with your mobile phone.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Network & Access -->
+      <section class="tab-pane" id="tab-network">
+        <div class="network-layout">
+          <!-- Connection Mode Selector -->
+          <div class="connection-modes">
+            <div class="mode-tabs">
+              <button class="mode-tab active" data-mode="wifi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                <span>Local Wi-Fi (LAN)</span>
+                <span class="pill-chip chip-fast">Zero Lag</span>
+              </button>
+              <button class="mode-tab" data-mode="tunnel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                <span>Public Tunnel (4G/5G)</span>
+                <span class="pill-chip chip-cloud" id="tunnel-chip">Cloudflare</span>
+              </button>
+            </div>
+
+            <!-- LAN Mode View -->
+            <div class="mode-content active" id="mode-wifi-content">
+              <div class="access-card">
+                <div class="access-info">
+                  <div class="access-header">
+                    <span class="badge badge-lan">Direct LAN Connection</span>
+                    <h3>Connect over your Local Wi-Fi</h3>
+                    <p>Connect your phone to the same Wi-Fi network as this PC. No internet connection or cloud server required.</p>
+                  </div>
+
+                  <div class="endpoint-box">
+                    <label>Reachable Phone URL:</label>
+                    <div class="input-copy-group">
+                      <input type="text" id="lan-url-input" readonly value="Detecting...">
+                      <button class="btn btn-primary btn-copy" data-target="lan-url-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copy</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="network-cards-list" id="network-cards-container">
+                    <!-- Dynamic network interfaces populated here -->
+                  </div>
+                </div>
+
+                <div class="access-qr-box">
+                  <div class="qr-frame">
+                    <img id="lan-qr-img" src="" alt="LAN QR Code" class="qr-image">
+                  </div>
+                  <span class="qr-caption">Scan with Phone Camera</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Public Tunnel View -->
+            <div class="mode-content" id="mode-tunnel-content">
+              <div class="access-card">
+                <div class="access-info">
+                  <div class="access-header">
+                    <span class="badge badge-tunnel" id="tunnel-status-badge">Tunnel Stopped</span>
+                    <h3>Global Mobile Access (Cellular 4G/5G)</h3>
+                    <p>Securely connect to your PC from outside your home or office via an encrypted Cloudflare Tunnel.</p>
+                  </div>
+
+                  <div class="tunnel-control-bar">
+                    <button id="toggle-tunnel-btn" class="btn btn-primary btn-tunnel-action">
+                      <span id="tunnel-btn-icon">⚡</span>
+                      <span id="tunnel-btn-text">Start Cloudflare Tunnel</span>
+                    </button>
+                    <span class="tunnel-status-text" id="tunnel-status-text">Idle (No active tunnel)</span>
+                  </div>
+
+                  <div class="endpoint-box" id="tunnel-endpoint-box" style="display: none;">
+                    <label>Public Phone URL:</label>
+                    <div class="input-copy-group">
+                      <input type="text" id="tunnel-url-input" readonly value="">
+                      <button class="btn btn-primary btn-copy" data-target="tunnel-url-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copy</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="access-qr-box" id="tunnel-qr-box" style="display: none;">
+                  <div class="qr-frame">
+                    <img id="tunnel-qr-img" src="" alt="Tunnel QR Code" class="qr-image">
+                  </div>
+                  <span class="qr-caption">Scan anywhere in the world</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Host Settings & Config Builder -->
+      <section class="tab-pane" id="tab-settings">
+        <div class="settings-container">
+          <form id="config-form" class="settings-form">
+            <!-- Security PIN Card -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-title">
+                  <h3>Remote Security PIN</h3>
+                  <p>Protects your phone connection from unauthorized access on the local network or public tunnel.</p>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="cfg-pin">Connection PIN</label>
+                <div class="input-toggle-group">
+                  <input type="password" id="cfg-pin" name="pin" placeholder="1234" value="1234" autocomplete="off">
+                  <button type="button" class="btn btn-ghost" id="toggle-pin-visibility" title="Show/Hide PIN">
+                    👁️
+                  </button>
+                </div>
+                <small class="form-hint">Tip: Use a memorable 4 to 8 digit code. Leave empty to disable PIN protection.</small>
+              </div>
+            </div>
+
+            <!-- Server & Network Settings -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-title">
+                  <h3>Server & Power Management</h3>
+                  <p>Control server port and prevent Windows from sleeping during long coding sessions.</p>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="cfg-port">HTTP / WebSocket Port</label>
+                <input type="number" id="cfg-port" name="port" value="3000" min="1024" max="65535">
+                <small class="form-hint">Default is 3000. Changes require server restart.</small>
+              </div>
+
+              <div class="form-group-toggle">
+                <div class="toggle-meta">
+                  <span class="toggle-title">Prevent PC Sleep Mode</span>
+                  <span class="toggle-desc">Keeps Windows awake while Pocket Antigravity is running so you can code from bed or commute.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="cfg-prevent-sleep" name="preventSleep">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="cfg-persona">Default AI Persona</label>
+                <select id="cfg-persona" name="defaultPersona">
+                  <option value="default">Default (Standard Assistant)</option>
+                  <option value="architect">Senior Software Architect</option>
+                  <option value="minimalist">Minimalist Coder (Code Only)</option>
+                  <option value="debugger">Senior Debugger & Bug Hunter</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-primary btn-save">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span>Save Configuration</span>
+              </button>
+              <span id="config-save-feedback" class="save-feedback"></span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 4: Live Monitor -->
+      <section class="tab-pane" id="tab-status">
+        <div class="monitor-grid">
+          <div class="stat-card">
+            <span class="stat-label">Connected Phones</span>
+            <span class="stat-value" id="stat-clients">0</span>
+            <span class="stat-meta">Active WebSockets</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Server Uptime</span>
+            <span class="stat-value" id="stat-uptime">0m</span>
+            <span class="stat-meta">Host Process</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">RAM Usage</span>
+            <span class="stat-value" id="stat-memory">0 MB</span>
+            <span class="stat-meta">V8 Heap Allocation</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Active Session</span>
+            <span class="stat-value font-mono" id="stat-session">None</span>
+            <span class="stat-meta">Current Brain Conversation</span>
+          </div>
+        </div>
+
+        <div class="activity-box">
+          <div class="activity-header">
+            <h3>Live Host Event Stream</h3>
+            <button class="btn btn-ghost btn-sm" id="clear-log-btn">Clear Log</button>
+          </div>
+          <div class="activity-terminal" id="activity-log">
+            <div class="log-entry log-info"><span class="log-time">[Init]</span> Dashboard initialized successfully.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -29,6 +29,7 @@
     "start": "node src/server.js",
     "app": "bin\\start.bat",
     "stop": "bin\\stop.bat",
+    "dashboard": "bin\\dashboard.bat",
     "tunnel": "node bin/start-tunnel.js",
     "test": "node --test tests/**/*.test.js"
   },
@@ -36,6 +37,7 @@
     "chokidar": "^3.6.0",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.4",
     "ws": "^8.18.0"
   }
 }
