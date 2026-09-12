@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - 2026-09-12
+
+### 🎛️ Desktop Host Control Center & Mobile PWA
+- **Desktop Control Center Hub (`public/dashboard/`)**:
+  - Standalone Discord/VirtualBox-inspired dark dashboard hosted at `http://localhost:3000/dashboard`.
+  - Windowed App Mode launcher (`bin/dashboard.bat` or `npm run dashboard`) running in Edge/Chrome with zero extra Electron/Tauri bloat.
+  - **System Doctor Widget**: Automated environment inspection checking Node.js runtime, Git CLI, Windows PowerShell, and Antigravity IDE active process with real-time status badges.
+  - **Network & Access Hub**: Automatic local IP resolution (`os.networkInterfaces()`) for direct Local Wi-Fi (0ms lag) pairing with instant high-resolution SVG QR code generation.
+  - **On-Demand Public Tunnel Toggle**: 1-Click start/stop switch for Cloudflare Tunnel with Localtunnel fallback and dynamic public QR code rendering.
+  - **Settings & Host Builder**: Visual PIN editor, port configuration, default persona selector, and Windows Keep-Awake toggle.
+  - **Windows Power Management**: Kernel execution state toggle (`SetThreadExecutionState`) preventing the host PC from going to sleep during remote mobile sessions.
+  - **Live Host Telemetry**: Real-time connected mobile client counter, memory consumption, server uptime, and event stream.
+- **Mobile Progressive Web App (PWA)**:
+  - Added Web App Manifest (`public/manifest.json`) and iOS standalone meta tags for full-screen, native-feeling installation without building an APK.
+  - Offline shell caching via Service Worker (`public/sw.js`) with stale-while-revalidate for assets and pass-through for WebSockets/APIs.
+  - Integrated `PwaManager` (`public/js/pwa.js`) handling install prompts (`beforeinstallprompt`) and standalone mode detection.
+- **Automated Tests**:
+  - Added comprehensive test suite (`tests/unit/system.test.js`, `tests/unit/dashboard-endpoints.test.js`) verifying diagnostics, network resolution, config persistence, and PWA assets (26/26 tests passing).
+
+---
+
 ## [1.5.0] - 2026-09-12
 
 ### 🏛️ Architecture Refinement, Security Hardening & Performance

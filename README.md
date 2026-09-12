@@ -38,12 +38,14 @@ Todo esto **sin instalar extensiones propietarias**: corre sobre Windows de form
 
 ## Lo que podés hacer (Features clave)
 
+* **Desktop Control Center (Dashboard Host)**: Interfaz de escritorio inspirada en Discord/VirtualBox (`bin/dashboard.bat` o `npm run dashboard`) con diagnóstico automatizado de dependencias (**System Doctor**), conmutador de modos de red (**Wi-Fi Local con 0ms de lag** vs **Túnel Cloudflare**), generador de códigos QR SVG y gestor de energía (**Prevent PC Sleep**).
+* **Instalable como PWA en tu celular**: Abrís la app en Chrome (Android) o Safari (iOS) y tocás "Instalar / Agregar a Inicio". Se ejecuta a pantalla completa como una app nativa sin necesidad de compilar APKs.
 * **Control remoto total**: Enviás prompts de texto, capturas de cámara o referencias a archivos de tu proyecto con un toque (`@ruta/archivo`).
 * **Selector de Personas y Roles**: Cambiá el comportamiento del asistente con chips deslizables (`⚡ Pair Dev`, `🔍 Reviewer`, `📐 Architect`, `🐛 Bug Hunter`, `🎯 Goal`, `💡 Teacher`) enriqueciendo tus prompts automáticamente sin redactar textos largos desde el celular.
 * **Revisión y aprobación de Diffs**: Si el agente toca código, aparece un banner en tu teléfono con las estadísticas (`+14 / -3`). Abrís el visor con sintaxis a color y aceptás o descartás los cambios con 1 toque.
 * **Streaming en tiempo real**: Ves exactamente lo que el agente va pensando y respondiendo en vivo mediante WebSockets directos.
 * **Explorador de tu proyecto**: Navegás el árbol de archivos de tu repositorio y ves el código fuente con syntax highlighting desde el teléfono.
-* **Acceso global con PIN**: Genera un túnel HTTPS seguro (Cloudflare / Localtunnel) protegido por un PIN de 4 dígitos para que solo vos puedas entrar desde 4G, 5G o Wi-Fi.
+* **Acceso seguro con PIN**: Conexión cifrada protegida por HMAC token de 24h y rate-limiting contra fuerza bruta (5 intentos fallidos = 5 minutos de bloqueo).
 
 ---
 
@@ -56,17 +58,23 @@ cd Pocket-AntiGravityIDE
 npm install
 ```
 
-### 2. Iniciar (1 Click)
-Hacé doble click en **`bin/start.bat`** (o ejecutá `npm run app`).
+### 2. Iniciar el Control Center o el Servidor
+Tenés dos formas de usarlo:
 
-Esto abre el servidor local y levanta el túnel HTTPS. En la consola vas a ver la URL pública y un código QR para escanear con la cámara de tu celular.
+* **Opción A (Recomendada - Control Center de Escritorio)**:
+  Hacé doble click en **`bin/dashboard.bat`** (o ejecutá `npm run dashboard`).
+  Se abre una ventana estilo Discord con el **System Doctor**, tu QR de Wi-Fi local para conectar al instante con cero lag, y el switch para prender el túnel público cuando salís de tu casa.
 
-### 3. Conectar y desbloquear
-1. Abrí el enlace en Safari o Chrome en tu celular.
-2. Ingresá el PIN de seguridad (por defecto viene configurado en `1234` en `pocket.config.json`).
-3. ¡Listo! Ya estás conectado en vivo a tu Antigravity IDE.
+* **Opción B (Lanzador Rápido)**:
+  Hacé doble click en **`bin/start.bat`** (o ejecutá `npm run app`).
+  Inicia el servidor y el túnel en segundo plano mostrando el QR en terminal.
 
-> Para detener todo cuando termines, hacé doble click en **`bin/stop.bat`** (o ejecutá `npm run stop`).
+### 3. Conectar desde el celular (PWA)
+1. Escaneá el código QR con la cámara de tu celular (o abrí la URL).
+2. Ingresá tu PIN de seguridad (por defecto `1234`, configurable desde el Dashboard).
+3. **Instalación PWA**: Tocá el botón de instalar o en el menú de Safari/Chrome seleccioná **"Agregar a pantalla de inicio"** para usarlo a pantalla completa como una app nativa sin marcos de navegador.
+
+> Para detener el servidor cuando termines, hacé doble click en **`bin/stop.bat`** (o ejecutá `npm run stop`).
 
 ---
 
