@@ -1,5 +1,5 @@
 const express = require('express');
-const { requireAuth } = require('../../../infrastructure/security/pin-auth');
+const { requireAuth } = require('../middleware/auth.middleware');
 const { getActiveWorkspaceRoot } = require('../../../infrastructure/workspace/resolver');
 
 function createChangesRoutes({ reviewChangesUseCase, onChangesBroadcast }) {

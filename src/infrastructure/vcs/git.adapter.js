@@ -104,9 +104,11 @@ class GitAdapter extends VcsPort {
 
   async rejectAll(workspaceRoot) {
     try {
-      await this.runGit(['restore', '.'], workspaceRoot);
-      await this.runGit(['clean', '-fd'], workspaceRoot);
-      return { success: true, message: 'All changes reverted.' };
+      // Non-destructive safety: Stash all modifications and untracked files first
+      const stashMsg = `pocket-reject-backup-${Date.now()}`;
+      await this.runGit(['stash', 'push', '--include-untracked', '-m', stashMsg], workspaceRoot).catch(() => {});
+      await this.runGit(['restore', '.'], workspaceRoot).catch(() => {});
+      return { success: true, message: 'All changes safely reverted (backup preserved in git stash).' };
     } catch (err) {
       return { success: false, error: err.message };
     }

@@ -1,5 +1,5 @@
 const express = require('express');
-const { requireAuth } = require('../../../infrastructure/security/pin-auth');
+const { requireAuth } = require('../middleware/auth.middleware');
 
 function createPersonasRoutes({ managePersonasUseCase }) {
   const router = express.Router();

@@ -1,5 +1,5 @@
 const express = require('express');
-const { requireAuth } = require('../../../infrastructure/security/pin-auth');
+const { requireAuth } = require('../middleware/auth.middleware');
 const { getWorkspaceTree, getWorkspaceFileContent } = require('../../../infrastructure/workspace/explorer');
 const { getActiveWorkspaceRoot } = require('../../../infrastructure/workspace/resolver');
 
