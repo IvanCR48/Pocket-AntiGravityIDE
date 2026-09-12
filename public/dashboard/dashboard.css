@@ -818,11 +818,53 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+}
+
+.activity-terminal::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 1;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.activity-terminal::after {
+  content: "▋";
+  display: inline-block;
+  color: #5865f2;
+  font-size: 13px;
+  animation: blink-cursor 1s infinite;
+  margin-top: 4px;
+  z-index: 2;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(88, 101, 242, 0.8); }
+  50% { opacity: 0; }
 }
 
 .log-entry {
   line-height: 1.5;
   color: var(--text-normal);
+  position: relative;
+  z-index: 2;
+  animation: log-appear 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes log-appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .log-time {
@@ -831,9 +873,9 @@ input:checked + .slider:before {
 }
 
 .log-info { color: #8591f8; }
-.log-success { color: #57f287; }
-.log-warn { color: #fee75c; }
-.log-error { color: #ed4245; }
+.log-success { color: #57f287; text-shadow: 0 0 10px rgba(87, 242, 135, 0.3); }
+.log-warn { color: #fee75c; text-shadow: 0 0 10px rgba(254, 231, 92, 0.3); }
+.log-error { color: #ed4245; text-shadow: 0 0 10px rgba(237, 66, 69, 0.3); }
 
 /* Buttons */
 .btn {

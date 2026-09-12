@@ -16,6 +16,7 @@ const { GitAdapter } = require('./infrastructure/vcs/git.adapter');
 const { JsonlTranscriptAdapter, DEFAULT_BRAIN_DIR } = require('./infrastructure/transcript/jsonl-transcript.adapter');
 const { SystemDoctor } = require('./infrastructure/system/doctor');
 const { TunnelManager } = require('./infrastructure/system/tunnel-manager');
+const { getLogoBanner, box, COLORS, rgb, BOLD, RESET, DIM } = require('./infrastructure/terminal/theme');
 
 // Inbound Primary Interfaces
 const { createAuthRoutes } = require('./interfaces/http/routes/auth.routes');
@@ -172,11 +173,16 @@ if (config.preventSleep) {
 const PORT = process.env.PORT || config.port || 3000;
 server.listen(PORT, () => {
   const root = getActiveWorkspaceRoot();
-  console.log(`===================================================`);
-  console.log(`🚀 Pocket Antigravity [Hexagonal Architecture] Port: ${PORT}`);
-  console.log(`🎛️  Host Dashboard:  http://localhost:${PORT}/dashboard`);
-  console.log(`🔒 Security PIN:   ${config.pin ? 'ENABLED' : 'DISABLED'}`);
-  console.log(`📁 Active Workspace: ${root}`);
-  console.log(`🧠 Brain Logs:      ${DEFAULT_BRAIN_DIR}`);
-  console.log(`===================================================`);
+  const netInfo = systemDoctor.getNetworkInfo(PORT);
+  
+  console.log('\n' + getLogoBanner() + '\n');
+  console.log(box([
+    `🚀 ${BOLD}Pocket Antigravity Host Engine${RESET}  ${rgb(COLORS.neonGreen[0], COLORS.neonGreen[1], COLORS.neonGreen[2], '[ONLINE]')}`,
+    ``,
+    `🎛️  ${BOLD}Control Center:${RESET}    ${rgb(COLORS.cyan[0], COLORS.cyan[1], COLORS.cyan[2], `http://localhost:${PORT}/dashboard`)}`,
+    `📱 ${BOLD}Local Wi-Fi URL:${RESET}   ${rgb(COLORS.blurple[0], COLORS.blurple[1], COLORS.blurple[2], netInfo.primaryUrl)}`,
+    `🔒 ${BOLD}Security PIN:${RESET}      ${config.pin ? rgb(COLORS.neonGreen[0], COLORS.neonGreen[1], COLORS.neonGreen[2], 'ENABLED (Protected)') : rgb(COLORS.yellow[0], COLORS.yellow[1], COLORS.yellow[2], 'DISABLED')}`,
+    `📁 ${BOLD}Workspace:${RESET}         ${DIM}${root}${RESET}`,
+    `🧠 ${BOLD}Brain Logs:${RESET}        ${DIM}${DEFAULT_BRAIN_DIR}${RESET}`
+  ], { title: `POCKET ANTIGRAVITY v1.6.0 [PORT ${PORT}]`, borderColor: COLORS.blurple }) + '\n');
 });
