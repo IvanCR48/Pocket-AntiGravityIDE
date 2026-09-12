@@ -27,9 +27,10 @@
   ],
   "scripts": {
     "start": "node src/server.js",
-    "app": "start.bat",
-    "stop": "stop.bat",
-    "tunnel": "node scripts/start-tunnel.js"
+    "app": "bin\\start.bat",
+    "stop": "bin\\stop.bat",
+    "tunnel": "node bin/start-tunnel.js",
+    "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {
     "chokidar": "^3.6.0",

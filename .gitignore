@@ -11,6 +11,8 @@ scratch/
 .DS_Store
 Thumbs.db
 *.log
+*.pid
+.pocket_trash/
 
 # Environment & IDE
 .env

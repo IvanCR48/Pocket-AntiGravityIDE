@@ -1,6 +1,6 @@
 @echo off
 title Launch Pocket Antigravity
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo ==================================================
 echo 🚀 Starting Pocket Antigravity Host & Tunnel...
@@ -14,7 +14,7 @@ start "Pocket Antigravity Server" cmd /k "title Pocket Antigravity Server && nod
 timeout /t 2 /nobreak >nul
 
 :: 2. Start Global Access Tunnel in new terminal window
-start "Pocket Antigravity Tunnel" cmd /k "title Pocket Antigravity Tunnel && node scripts/start-tunnel.js"
+start "Pocket Antigravity Tunnel" cmd /k "title Pocket Antigravity Tunnel && node bin/start-tunnel.js"
 
 echo ==================================================
 echo ✅ Pocket Antigravity is up and running!
