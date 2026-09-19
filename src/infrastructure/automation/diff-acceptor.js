@@ -10,9 +10,10 @@ function triggerIdeAccept() {
     const psScript = path.join(__dirname, 'native', 'diff-acceptor.ps1');
     const child = spawn('powershell.exe', [
       '-NoProfile',
+      '-WindowStyle', 'Hidden',
       '-ExecutionPolicy', 'Bypass',
       '-File', psScript
-    ]);
+    ], { windowsHide: true });
 
     let output = '';
     child.stdout.on('data', (d) => output += d.toString());

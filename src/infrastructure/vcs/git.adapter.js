@@ -7,7 +7,7 @@ const { FileDiff, WorkspaceChanges } = require('../../core/domain/change');
 class GitAdapter extends VcsPort {
   runGit(args, cwd) {
     return new Promise((resolve, reject) => {
-      execFile('git', args, { cwd, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+      execFile('git', args, { cwd, maxBuffer: 10 * 1024 * 1024, windowsHide: true }, (err, stdout, stderr) => {
         if (err) return reject(new Error(stderr || err.message));
         resolve(stdout.trim());
       });

@@ -31,6 +31,7 @@ function injectMedia(options = {}) {
   return new Promise((resolve) => {
     const args = [
       '-NoProfile',
+      '-WindowStyle', 'Hidden',
       '-ExecutionPolicy', 'Bypass',
       '-File', PS_SCRIPT_PATH,
       '-ImagePath', imagePath,
@@ -46,7 +47,7 @@ function injectMedia(options = {}) {
       args.push('-SendEnter:$false');
     }
 
-    execFile('powershell.exe', args, { encoding: 'utf8' }, (error, stdout, stderr) => {
+    execFile('powershell.exe', args, { encoding: 'utf8', windowsHide: true }, (error, stdout, stderr) => {
       if (error) {
         return resolve({
           success: false,

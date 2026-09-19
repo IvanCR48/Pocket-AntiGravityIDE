@@ -11,13 +11,14 @@ function getChatState(targetTitle = 'Antigravity IDE', processName = 'Antigravit
   return new Promise((resolve) => {
     const args = [
       '-NoProfile',
+      '-WindowStyle', 'Hidden',
       '-ExecutionPolicy', 'Bypass',
       '-File', PS_SCRIPT_PATH,
       '-TargetTitle', targetTitle,
       '-ProcessName', processName
     ];
 
-    execFile('powershell.exe', args, { encoding: 'utf8', timeout: 2500 }, (error, stdout, stderr) => {
+    execFile('powershell.exe', args, { encoding: 'utf8', timeout: 2500, windowsHide: true }, (error, stdout, stderr) => {
       if (error) {
         if (stderr) console.error('[checkChatState] PowerShell stderr:', stderr.trim());
         return resolve({

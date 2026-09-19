@@ -33,6 +33,7 @@ function injectText(options = {}) {
   return new Promise((resolve) => {
     const args = [
       '-NoProfile',
+      '-WindowStyle', 'Hidden',
       '-ExecutionPolicy', 'Bypass',
       '-File', PS_SCRIPT_PATH,
       '-Text', text,
@@ -52,7 +53,7 @@ function injectText(options = {}) {
       args.push('-NewChat');
     }
 
-    execFile('powershell.exe', args, { encoding: 'utf8' }, (error, stdout, stderr) => {
+    execFile('powershell.exe', args, { encoding: 'utf8', windowsHide: true }, (error, stdout, stderr) => {
       if (error) {
         return resolve({
           success: false,
