@@ -364,4 +364,95 @@ export function initChatView() {
       }
     });
   }
+
+  initVoiceDictation();
 }
+
+export function initVoiceDictation() {
+  const micBtn = document.getElementById('mic-btn');
+  const promptInput = document.getElementById('prompt-input');
+  if (!micBtn || !promptInput) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    micBtn.title = 'Voice dictation not supported in this browser';
+    micBtn.style.opacity = '0.5';
+    micBtn.addEventListener('click', () => {
+      alert('Voice dictation requires Web Speech API (supported on Chrome, Edge, and Safari iOS 14.5+).');
+    });
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = navigator.language || 'en-US';
+
+  let isListening = false;
+  let basePromptText = '';
+
+  function startListening() {
+    try {
+      basePromptText = promptInput.value ? promptInput.value.trim() + ' ' : '';
+      recognition.start();
+      isListening = true;
+      micBtn.classList.add('recording');
+      micBtn.title = 'Listening... Tap to finish dictation';
+    } catch (err) {
+      console.warn('Speech recognition start failed:', err);
+    }
+  }
+
+  function stopListening() {
+    try {
+      recognition.stop();
+    } catch (_) {}
+    isListening = false;
+    micBtn.classList.remove('recording');
+    micBtn.title = 'Voice Dictation (Walkie-Talkie)';
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  });
+
+  recognition.onresult = (event) => {
+    let interimTranscript = '';
+    let accumulatedFinal = '';
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      const piece = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        accumulatedFinal += piece;
+      } else {
+        interimTranscript += piece;
+      }
+    }
+
+    if (accumulatedFinal) {
+      basePromptText += accumulatedFinal + ' ';
+    }
+
+    promptInput.value = (basePromptText + interimTranscript).trimStart();
+    promptInput.style.height = '42px';
+    promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
+  };
+
+  recognition.onerror = (event) => {
+    console.warn('SpeechRecognition error:', event.error);
+    if (event.error !== 'no-speech') {
+      stopListening();
+    }
+  };
+
+  recognition.onend = () => {
+    if (isListening) {
+      stopListening();
+    }
+  };
+}
+

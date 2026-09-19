@@ -868,6 +868,29 @@ textarea#prompt-input:focus {
   border-color: var(--accent-primary);
 }
 
+.btn-icon.recording {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+  animation: micPulse 1.2s infinite ease-in-out;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes micPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
 .btn-send {
   background: var(--accent-primary);
   color: #ffffff;
