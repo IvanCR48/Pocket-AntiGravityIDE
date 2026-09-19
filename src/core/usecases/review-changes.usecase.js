@@ -24,11 +24,9 @@ class ReviewChangesUseCase {
   }
 
   async acceptFile(workspaceRoot, filePath) {
-    if (this.ideAutomation && typeof this.ideAutomation.acceptFocusedHunk === 'function') {
-      try {
-        await this.ideAutomation.acceptFocusedHunk();
-      } catch (_) {}
-    }
+    // Note: Do not trigger IDE-wide acceptFocusedHunk here, as that sends Alt+Enter
+    // which globally accepts all pending files across the entire workspace in Antigravity IDE.
+    // Individual card acceptance strictly stages only the specific file via VCS.
     return await this.vcs.acceptFile(workspaceRoot, filePath);
   }
 

@@ -35,3 +35,62 @@ index 1234567..abcdef0 100644
     assert.strictEqual(typeof adapter.rejectFile, 'function');
   });
 });
+
+const { ReviewChangesUseCase } = require('../../src/core/usecases/review-changes.usecase');
+
+describe('ReviewChangesUseCase Isolation', () => {
+  it('acceptFile only calls vcs.acceptFile and never calls ideAutomation.acceptFocusedHunk', async () => {
+    let vcsAcceptFileCalledWith = null;
+    let ideAcceptHunkCalled = false;
+
+    const mockVcs = {
+      acceptFile: async (root, file) => {
+        vcsAcceptFileCalledWith = { root, file };
+        return { success: true };
+      }
+    };
+    const mockIde = {
+      acceptFocusedHunk: async () => {
+        ideAcceptHunkCalled = true;
+      }
+    };
+
+    const useCase = new ReviewChangesUseCase({
+      vcsPort: mockVcs,
+      ideAutomationPort: mockIde
+    });
+
+    const res = await useCase.acceptFile('/fake/root', 'src/app.js');
+    assert.strictEqual(res.success, true);
+    assert.deepStrictEqual(vcsAcceptFileCalledWith, { root: '/fake/root', file: 'src/app.js' });
+    assert.strictEqual(ideAcceptHunkCalled, false, 'acceptFile must NEVER trigger ideAutomation.acceptFocusedHunk');
+  });
+
+  it('acceptAll calls both ideAutomation.acceptFocusedHunk and vcs.acceptAll', async () => {
+    let vcsAcceptAllCalled = false;
+    let ideAcceptHunkCalled = false;
+
+    const mockVcs = {
+      acceptAll: async () => {
+        vcsAcceptAllCalled = true;
+        return { success: true };
+      }
+    };
+    const mockIde = {
+      acceptFocusedHunk: async () => {
+        ideAcceptHunkCalled = true;
+      }
+    };
+
+    const useCase = new ReviewChangesUseCase({
+      vcsPort: mockVcs,
+      ideAutomationPort: mockIde
+    });
+
+    const res = await useCase.acceptAll('/fake/root');
+    assert.strictEqual(res.success, true);
+    assert.strictEqual(ideAcceptHunkCalled, true);
+    assert.strictEqual(vcsAcceptAllCalled, true);
+  });
+});
+
