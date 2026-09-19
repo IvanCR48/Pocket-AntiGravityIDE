@@ -1,4 +1,5 @@
 import { authFetch } from '../auth.js';
+import { playSubtleAcceptSound } from './diff-view.js';
 
 let activeSessionId = null;
 let selectedFile = null;
@@ -41,6 +42,55 @@ window.copyCodeSnippet = function (btn) {
   });
 };
 
+// Global Toast System
+export function showToast(message, type = 'info') {
+  const toast = document.getElementById('pocket-toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.className = `pocket-toast ${type}`;
+  toast.style.display = 'flex';
+
+  void toast.offsetWidth;
+  toast.classList.add('show');
+
+  if (window._toastTimeout) clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      if (!toast.classList.contains('show')) toast.style.display = 'none';
+    }, 300);
+  }, 3500);
+}
+
+// 1-Tap Plan Approval Handler
+window.approvePocketPlan = async function () {
+  try {
+    playSubtleAcceptSound();
+  } catch (_) {}
+
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try { navigator.vibrate(20); } catch (_) {}
+  }
+
+  showToast('Approving plan... Sending "Proceed" to Antigravity');
+
+  try {
+    const res = await authFetch('/api/prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: 'Proceed' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Plan approved! Antigravity is now executing.');
+    } else {
+      showToast('Error: ' + (data.error || 'Failed to approve plan'), 'error');
+    }
+  } catch (err) {
+    showToast('Failed to send approval: ' + err.message, 'error');
+  }
+};
+
 export function parseMarkdown(text) {
   if (!text) return '';
 
@@ -71,6 +121,14 @@ export function parseMarkdown(text) {
       `;
     });
 
+    // Intercept file:/// links and artifact markdown links into clickable modal badges
+    html = html.replace(/<a\s+href="(file:\/\/\/[^"]+|\S+?\.(?:md|json|js|ts|html|css|py|ps1))"[^>]*>([\s\S]*?)<\/a>/gi, (match, href, label) => {
+      const isPlan = href.toLowerCase().includes('plan') || label.toLowerCase().includes('plan');
+      const icon = isPlan ? '📋' : '📄';
+      const cleanHref = href.replace(/'/g, "\\'");
+      return `<button type="button" class="artifact-chip-link ${isPlan ? 'is-plan' : ''}" onclick="window.openPocketArtifact('${cleanHref}')">${icon} <span>${label}</span></button>`;
+    });
+
     return html;
   }
 
@@ -97,6 +155,14 @@ export function parseMarkdown(text) {
   escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
   escaped = escaped.replace(/\n/g, '<br/>');
 
+  // Fallback artifact link interceptor
+  escaped = escaped.replace(/\[([^\]]+)\]\((file:\/\/\/[^\)]+|\S+?\.(?:md|json|js|ts|html|css|py|ps1))\)/gi, (match, label, href) => {
+    const isPlan = href.toLowerCase().includes('plan') || label.toLowerCase().includes('plan');
+    const icon = isPlan ? '📋' : '📄';
+    const cleanHref = href.replace(/'/g, "\\'");
+    return `<button type="button" class="artifact-chip-link ${isPlan ? 'is-plan' : ''}" onclick="window.openPocketArtifact('${cleanHref}')">${icon} <span>${label}</span></button>`;
+  });
+
   return escaped;
 }
 
@@ -121,6 +187,28 @@ export function renderMessage(role, text) {
 
   msgDiv.appendChild(meta);
   msgDiv.appendChild(body);
+
+  // If assistant presented an implementation plan or requests review, append 1-tap quick action bar
+  if (role === 'assistant' && /implementation_plan\.md|#\s+Implementation Plan|User Review Required|explicit approval before proceeding|Say 'Proceed'/i.test(text)) {
+    const planBar = document.createElement('div');
+    planBar.className = 'plan-quick-action-bar';
+    planBar.innerHTML = `
+      <div class="plan-quick-action-header">
+        <span class="plan-quick-badge">📋 Plan Ready</span>
+        <span class="plan-quick-title">Antigravity awaits approval to execute</span>
+      </div>
+      <div class="plan-quick-buttons">
+        <button type="button" class="btn-quick-view-plan" onclick="window.openPocketArtifact('implementation_plan.md')">
+          <span>👁️ View Plan</span>
+        </button>
+        <button type="button" class="btn-quick-approve-plan" onclick="window.approvePocketPlan()">
+          <span>⚡ Approve & Proceed</span>
+        </button>
+      </div>
+    `;
+    msgDiv.appendChild(planBar);
+  }
+
   chatContainer.appendChild(msgDiv);
   scrollToBottom();
 }
@@ -197,6 +285,7 @@ export function selectPersona(id) {
   }
 
   updatePersonaBadge();
+  console.log(`[Persona] Switched active persona to: ${id}`);
 }
 
 export function updatePersonaBadge() {

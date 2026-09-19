@@ -1634,3 +1634,267 @@ textarea#prompt-input:focus {
   align-items: center;
   gap: 4px;
 }
+
+/* Subtle Shimmer Effect for Loading Snippets */
+.code-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.03) 100%);
+  background-size: 200% 100%;
+  animation: codeShimmerAnim 1.8s infinite;
+}
+
+@keyframes codeShimmerAnim {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   Artifact & Implementation Plan Mobile Review Elements
+   ========================================================================== */
+
+.artifact-chip-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-family: var(--font-main);
+  cursor: pointer;
+  vertical-align: middle;
+  margin: 2px 3px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.artifact-chip-link:hover,
+.artifact-chip-link:active {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: #60a5fa;
+  transform: translateY(-1px) scale(1.02);
+}
+
+.artifact-chip-link.is-plan {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #6ee7b7;
+}
+
+.artifact-chip-link.is-plan:hover,
+.artifact-chip-link.is-plan:active {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #34d399;
+}
+
+/* Inline Plan Quick Action Bar */
+.plan-quick-action-bar {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.plan-quick-action-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-quick-badge {
+  background: rgba(16, 185, 129, 0.22);
+  color: #a7f3d0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.plan-quick-title {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.plan-quick-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-quick-view-plan {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-bright);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.btn-quick-view-plan:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-quick-approve-plan {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-quick-approve-plan:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(16, 185, 129, 0.5);
+}
+
+.btn-quick-approve-plan:active {
+  transform: scale(0.97);
+}
+
+/* Modal Plan Accent Button */
+.plan-btn-accent {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  font-weight: 600 !important;
+}
+
+/* Large Diff Safe Line Limit Banner */
+.diff-line-limit-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px dashed rgba(59, 130, 246, 0.35);
+  border-radius: 10px;
+  margin: 12px 6px;
+  font-size: 0.78rem;
+  color: #93c5fd;
+  text-align: center;
+}
+
+.btn-load-all-lines {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+  transition: background 0.15s ease;
+}
+
+.btn-load-all-lines:hover {
+  background: #1d4ed8;
+}
+
+/* File Modal Body Rich Formatting */
+.file-modal-body {
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-bright);
+}
+
+.file-modal-body h1,
+.file-modal-body h2,
+.file-modal-body h3,
+.file-modal-body h4 {
+  color: #ffffff;
+  margin-top: 1.1em;
+  margin-bottom: 0.4em;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.file-modal-body ul,
+.file-modal-body ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.file-modal-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  font-size: 0.8rem;
+}
+
+.file-modal-body table th,
+.file-modal-body table td {
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.file-modal-body table th {
+  background: var(--bg-header);
+}
+
+/* Global Floating Toast */
+.pocket-toast {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-24px);
+  opacity: 0;
+  background: rgba(17, 24, 39, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  padding: 9px 18px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pocket-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.pocket-toast.error {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.pocket-toast.warning {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+}

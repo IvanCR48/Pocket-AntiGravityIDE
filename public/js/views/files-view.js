@@ -83,14 +83,22 @@ export async function openFileModal(relPath) {
   currentViewingFilePath = relPath;
   if (modalFileTitle) modalFileTitle.textContent = relPath;
   if (modalFileBody) modalFileBody.innerHTML = '<div class="loading-state">Loading file content...</div>';
+  
+  const planApproveBtn = document.getElementById('plan-approve-modal-btn');
+  if (planApproveBtn) planApproveBtn.style.display = 'none';
+
   fileModal.style.display = 'flex';
 
   try {
     const res = await authFetch(`/api/workspace/file?path=${encodeURIComponent(relPath)}`);
     const data = await res.json();
     if (data.success) {
-      const parsed = parseMarkdown(`\`\`\`${data.language || 'plaintext'}\n${data.content}\n\`\`\``);
-      if (modalFileBody) modalFileBody.innerHTML = parsed;
+      if (data.language === 'markdown') {
+        if (modalFileBody) modalFileBody.innerHTML = parseMarkdown(data.content);
+      } else {
+        const parsed = parseMarkdown(`\`\`\`${data.language || 'plaintext'}\n${data.content}\n\`\`\``);
+        if (modalFileBody) modalFileBody.innerHTML = parsed;
+      }
     } else {
       if (modalFileBody) modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Error: ${data.error}</div>`;
     }
@@ -98,6 +106,45 @@ export async function openFileModal(relPath) {
     if (modalFileBody) modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Failed to load file: ${err.message}</div>`;
   }
 }
+
+export async function openArtifactModal(rawPath) {
+  if (!fileModal) return;
+  currentViewingFilePath = rawPath;
+
+  const fileName = rawPath.split(/[\/\\]/).pop() || 'Artifact';
+  if (modalFileTitle) modalFileTitle.textContent = `📋 ${fileName}`;
+  if (modalFileBody) modalFileBody.innerHTML = '<div class="loading-state">Loading artifact & plan content...</div>';
+
+  const planApproveBtn = document.getElementById('plan-approve-modal-btn');
+  if (planApproveBtn) planApproveBtn.style.display = 'none';
+
+  fileModal.style.display = 'flex';
+
+  try {
+    const res = await authFetch(`/api/sessions/active/artifact?path=${encodeURIComponent(rawPath)}`);
+    const data = await res.json();
+    if (data.success) {
+      if (modalFileTitle) modalFileTitle.textContent = `📋 ${data.fileName}`;
+      if (modalFileBody) {
+        if (data.language === 'markdown') {
+          modalFileBody.innerHTML = parseMarkdown(data.content);
+        } else {
+          modalFileBody.innerHTML = parseMarkdown(`\`\`\`${data.language || 'plaintext'}\n${data.content}\n\`\`\``);
+        }
+      }
+      if (data.isPlan && planApproveBtn) {
+        planApproveBtn.style.display = 'inline-flex';
+      }
+    } else {
+      if (modalFileBody) modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Error: ${data.error}</div>`;
+    }
+  } catch (err) {
+    if (modalFileBody) modalFileBody.innerHTML = `<div class="loading-state" style="color:var(--accent-error)">Failed to load artifact: ${err.message}</div>`;
+  }
+}
+
+// Expose globally for markdown onclick callbacks
+window.openPocketArtifact = openArtifactModal;
 
 export function initFilesView() {
   if (refreshFilesBtn) {
@@ -107,6 +154,16 @@ export function initFilesView() {
   if (closeModalBtn && fileModal) {
     closeModalBtn.addEventListener('click', () => {
       fileModal.style.display = 'none';
+    });
+  }
+
+  const planApproveBtn = document.getElementById('plan-approve-modal-btn');
+  if (planApproveBtn) {
+    planApproveBtn.addEventListener('click', async () => {
+      if (typeof window.approvePocketPlan === 'function') {
+        await window.approvePocketPlan();
+      }
+      if (fileModal) fileModal.style.display = 'none';
     });
   }
 

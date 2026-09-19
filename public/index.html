@@ -109,17 +109,21 @@
 
   <!-- File Viewer Modal -->
   <div id="file-viewer-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+    <div class="modal-content file-modal-content">
       <div class="modal-header">
         <span id="modal-file-title" class="modal-title">file.js</span>
         <div class="modal-actions">
+          <button id="plan-approve-modal-btn" class="btn-action plan-btn-accent" style="display: none;">⚡ Approve & Proceed</button>
           <button id="attach-file-prompt-btn" class="btn-action">Attach to Prompt</button>
           <button id="close-modal-btn" class="btn-close">✕</button>
         </div>
       </div>
-      <pre id="modal-file-body" class="code-body"><code>Loading file content...</code></pre>
+      <div id="modal-file-body" class="code-body file-modal-body">Loading file content...</div>
     </div>
   </div>
+
+  <!-- Global Toast Notification -->
+  <div id="pocket-toast" class="pocket-toast" style="display: none;"></div>
 
   <!-- Workspace Diff Viewer Modal -->
   <div id="diff-modal" class="modal-overlay" style="display: none;">

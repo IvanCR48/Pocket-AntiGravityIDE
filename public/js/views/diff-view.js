@@ -116,6 +116,8 @@ export function updateChangesBanner(changes) {
   currentChanges = changes;
   if (!changesBanner) return;
 
+  const isModalOpen = diffModal && diffModal.style.display === 'flex';
+
   if (changes && changes.hasChanges && changes.files && changes.files.length > 0) {
     const count = changes.summary ? changes.summary.files : changes.files.length;
     const add = changes.summary ? changes.summary.additions : changes.files.reduce((acc, f) => acc + f.additions, 0);
@@ -124,9 +126,20 @@ export function updateChangesBanner(changes) {
       changesSummaryText.textContent = `${count} file${count > 1 ? 's' : ''} modified (+${add} / -${del})`;
     }
     changesBanner.style.display = 'flex';
+
+    if (isModalOpen) {
+      if (selectedDiffFileIndex >= currentChanges.files.length) {
+        selectedDiffFileIndex = Math.max(0, currentChanges.files.length - 1);
+      }
+      renderDiffFileTabs();
+      renderSelectedFileDiff();
+    }
   } else {
     changesBanner.style.display = 'none';
-    if (diffModal) diffModal.style.display = 'none';
+    if (isModalOpen) {
+      // If modal was open and files reached 0, render the celebration state smoothly
+      renderSelectedFileDiff();
+    }
   }
 }
 
@@ -236,11 +249,14 @@ export function renderSelectedFileDiff() {
     if (diffStackBackdrop) diffStackBackdrop.style.display = 'none';
   }
 
-  // Render Diff Lines
+  // Render Diff Lines (with safe 1,000-line mobile performance cap)
   diffBodyContainer.innerHTML = '';
   const lines = (fileData.diff || '').split('\n');
+  const MAX_LINES = 1000;
+  const isLarge = lines.length > MAX_LINES;
+  const linesToRender = (fileData._showAllLines || !isLarge) ? lines : lines.slice(0, MAX_LINES);
 
-  lines.forEach((line) => {
+  linesToRender.forEach((line) => {
     const lineEl = document.createElement('div');
     lineEl.className = 'diff-line';
 
@@ -255,6 +271,23 @@ export function renderSelectedFileDiff() {
     lineEl.textContent = line || ' ';
     diffBodyContainer.appendChild(lineEl);
   });
+
+  if (isLarge && !fileData._showAllLines) {
+    const limitNotice = document.createElement('div');
+    limitNotice.className = 'diff-line-limit-banner';
+    limitNotice.innerHTML = `
+      <span>⚡ Showing first ${MAX_LINES} lines of ${lines.length} for smooth mobile performance.</span>
+      <button class="btn-load-all-lines">Load All ${lines.length} Lines</button>
+    `;
+    const loadBtn = limitNotice.querySelector('.btn-load-all-lines');
+    if (loadBtn) {
+      loadBtn.addEventListener('click', () => {
+        fileData._showAllLines = true;
+        renderSelectedFileDiff();
+      });
+    }
+    diffBodyContainer.appendChild(limitNotice);
+  }
 }
 
 export function resetCardTransform() {
