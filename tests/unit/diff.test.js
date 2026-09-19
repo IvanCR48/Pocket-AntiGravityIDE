@@ -29,4 +29,9 @@ index 1234567..abcdef0 100644
     assert.strictEqual(diffs[0].deletions, 1);
     assert.strictEqual(diffs[0].status, 'modified');
   });
+
+  it('exposes acceptFile and rejectFile methods', () => {
+    assert.strictEqual(typeof adapter.acceptFile, 'function');
+    assert.strictEqual(typeof adapter.rejectFile, 'function');
+  });
 });

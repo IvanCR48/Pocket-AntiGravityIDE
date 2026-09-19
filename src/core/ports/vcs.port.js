@@ -10,7 +10,15 @@ class VcsPort {
     throw new Error('Method not implemented.');
   }
 
+  async acceptFile(workspaceRoot, filePath) {
+    throw new Error('Method not implemented.');
+  }
+
   async rejectAll(workspaceRoot) {
+    throw new Error('Method not implemented.');
+  }
+
+  async rejectFile(workspaceRoot, filePath) {
     throw new Error('Method not implemented.');
   }
 }

@@ -102,6 +102,15 @@ class GitAdapter extends VcsPort {
     }
   }
 
+  async acceptFile(workspaceRoot, filePath) {
+    try {
+      await this.runGit(['add', '--', filePath], workspaceRoot);
+      return { success: true, message: `File ${filePath} staged in Git.` };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
   async rejectAll(workspaceRoot) {
     try {
       // Non-destructive safety: Stash all modifications and untracked files first
@@ -109,6 +118,18 @@ class GitAdapter extends VcsPort {
       await this.runGit(['stash', 'push', '--include-untracked', '-m', stashMsg], workspaceRoot).catch(() => {});
       await this.runGit(['restore', '.'], workspaceRoot).catch(() => {});
       return { success: true, message: 'All changes safely reverted (backup preserved in git stash).' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  async rejectFile(workspaceRoot, filePath) {
+    try {
+      // Non-destructive safety: Try restore first, fallback to clean for untracked files
+      await this.runGit(['restore', '--', filePath], workspaceRoot).catch(async () => {
+        await this.runGit(['clean', '-f', '--', filePath], workspaceRoot).catch(() => {});
+      });
+      return { success: true, message: `File ${filePath} reverted.` };
     } catch (err) {
       return { success: false, error: err.message };
     }

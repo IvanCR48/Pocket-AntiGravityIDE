@@ -13,7 +13,10 @@ function createChangesRoutes({ reviewChangesUseCase, onChangesBroadcast }) {
 
   router.post('/accept', requireAuth, async (req, res) => {
     const root = getActiveWorkspaceRoot();
-    const result = await reviewChangesUseCase.acceptAll(root);
+    const { file } = req.body || {};
+    const result = file
+      ? await reviewChangesUseCase.acceptFile(root, file)
+      : await reviewChangesUseCase.acceptAll(root);
     if (typeof onChangesBroadcast === 'function') {
       onChangesBroadcast();
     }
@@ -26,7 +29,10 @@ function createChangesRoutes({ reviewChangesUseCase, onChangesBroadcast }) {
 
   router.post('/reject', requireAuth, async (req, res) => {
     const root = getActiveWorkspaceRoot();
-    const result = await reviewChangesUseCase.rejectAll(root);
+    const { file } = req.body || {};
+    const result = file
+      ? await reviewChangesUseCase.rejectFile(root, file)
+      : await reviewChangesUseCase.rejectAll(root);
     if (typeof onChangesBroadcast === 'function') {
       onChangesBroadcast();
     }

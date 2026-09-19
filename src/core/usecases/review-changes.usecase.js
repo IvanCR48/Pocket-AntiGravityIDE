@@ -23,8 +23,21 @@ class ReviewChangesUseCase {
     return await this.vcs.acceptAll(workspaceRoot);
   }
 
+  async acceptFile(workspaceRoot, filePath) {
+    if (this.ideAutomation && typeof this.ideAutomation.acceptFocusedHunk === 'function') {
+      try {
+        await this.ideAutomation.acceptFocusedHunk();
+      } catch (_) {}
+    }
+    return await this.vcs.acceptFile(workspaceRoot, filePath);
+  }
+
   async rejectAll(workspaceRoot) {
     return await this.vcs.rejectAll(workspaceRoot);
+  }
+
+  async rejectFile(workspaceRoot, filePath) {
+    return await this.vcs.rejectFile(workspaceRoot, filePath);
   }
 }
 
