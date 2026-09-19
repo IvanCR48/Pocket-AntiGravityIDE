@@ -10,6 +10,9 @@ const btnRejectChanges = document.getElementById('btn-reject-changes');
 const btnAcceptChanges = document.getElementById('btn-accept-changes');
 
 const diffModal = document.getElementById('diff-modal');
+const diffModalContent = document.querySelector('.diff-modal-content');
+const diffStampAccept = document.getElementById('diff-stamp-accept');
+const diffStampReject = document.getElementById('diff-stamp-reject');
 const closeDiffModalBtn = document.getElementById('close-diff-modal-btn');
 const diffModalStats = document.getElementById('diff-modal-stats');
 const diffFilesBar = document.getElementById('diff-files-bar');
@@ -46,6 +49,7 @@ export async function checkChanges() {
 export function openDiffModal() {
   if (!currentChanges || !currentChanges.files || currentChanges.files.length === 0) return;
 
+  resetCardTransform();
   selectedDiffFileIndex = 0;
   if (diffModalStats) {
     diffModalStats.textContent = `(${currentChanges.summary.files} files • +${currentChanges.summary.additions} / -${currentChanges.summary.deletions})`;
@@ -102,8 +106,23 @@ export function renderSelectedFileDiff() {
   });
 }
 
-export async function handleAcceptChanges() {
-  if (!confirm('Accept all pending changes in Antigravity IDE?')) return;
+export function resetCardTransform() {
+  if (diffModalContent) {
+    diffModalContent.classList.remove('swipe-fly-right', 'swipe-fly-left', 'swipe-reset');
+    diffModalContent.style.transform = '';
+  }
+  if (diffStampAccept) {
+    diffStampAccept.style.opacity = '0';
+    diffStampAccept.style.transform = 'rotate(-14deg) scale(0.8)';
+  }
+  if (diffStampReject) {
+    diffStampReject.style.opacity = '0';
+    diffStampReject.style.transform = 'rotate(14deg) scale(0.8)';
+  }
+}
+
+export async function executeAcceptChanges(skipConfirm = false) {
+  if (!skipConfirm && !confirm('Accept all pending changes in Antigravity IDE?')) return false;
 
   if (modalAcceptBtn) {
     modalAcceptBtn.textContent = 'Accepting...';
@@ -117,11 +136,14 @@ export async function handleAcceptChanges() {
       if (diffModal) diffModal.style.display = 'none';
       if (changesBanner) changesBanner.style.display = 'none';
       currentChanges = null;
+      return true;
     } else {
       alert(`Error accepting changes: ${data.error}`);
+      return false;
     }
   } catch (err) {
     alert(`Failed to accept changes: ${err.message}`);
+    return false;
   } finally {
     if (modalAcceptBtn) {
       modalAcceptBtn.textContent = 'Accept All';
@@ -130,8 +152,8 @@ export async function handleAcceptChanges() {
   }
 }
 
-export async function handleRejectChanges() {
-  if (!confirm('Discard and restore all changed files to their previous state?')) return;
+export async function executeRejectChanges(skipConfirm = false) {
+  if (!skipConfirm && !confirm('Discard and restore all changed files to their previous state?')) return false;
 
   if (modalRejectBtn) {
     modalRejectBtn.textContent = 'Rejecting...';
@@ -145,17 +167,151 @@ export async function handleRejectChanges() {
       if (diffModal) diffModal.style.display = 'none';
       if (changesBanner) changesBanner.style.display = 'none';
       currentChanges = null;
+      return true;
     } else {
       alert(`Error rejecting changes: ${data.error}`);
+      return false;
     }
   } catch (err) {
     alert(`Failed to reject changes: ${err.message}`);
+    return false;
   } finally {
     if (modalRejectBtn) {
       modalRejectBtn.textContent = 'Reject All';
       modalRejectBtn.disabled = false;
     }
   }
+}
+
+export function handleAcceptChanges() {
+  return executeAcceptChanges(false);
+}
+
+export function handleRejectChanges() {
+  return executeRejectChanges(false);
+}
+
+let isDragging = false;
+let isSwipingHorizontal = false;
+let startX = 0;
+let startY = 0;
+let currentDeltaX = 0;
+
+export function initSwipeGestures() {
+  if (!diffModalContent) return;
+
+  function onStart(e) {
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    if (e.target.closest('button') || e.target.closest('.diff-file-chip')) return;
+
+    isDragging = true;
+    isSwipingHorizontal = false;
+    currentDeltaX = 0;
+
+    const point = e.touches ? e.touches[0] : e;
+    startX = point.clientX;
+    startY = point.clientY;
+
+    diffModalContent.classList.remove('swipe-fly-right', 'swipe-fly-left', 'swipe-reset');
+  }
+
+  function onMove(e) {
+    if (!isDragging) return;
+
+    const point = e.touches ? e.touches[0] : e;
+    const dx = point.clientX - startX;
+    const dy = point.clientY - startY;
+
+    if (!isSwipingHorizontal) {
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+        isSwipingHorizontal = true;
+      } else if (Math.abs(dy) > 10) {
+        // Vertical scroll in diff code, cancel swipe gesture
+        isDragging = false;
+        return;
+      }
+    }
+
+    if (isSwipingHorizontal) {
+      if (e.cancelable) e.preventDefault();
+      currentDeltaX = dx;
+      const rot = dx * 0.045;
+      diffModalContent.style.transform = `translate3d(${dx}px, 0, 0) rotate(${rot}deg)`;
+
+      if (dx > 25) {
+        const factor = Math.min((dx - 25) / 95, 1);
+        if (diffStampAccept) {
+          diffStampAccept.style.opacity = factor;
+          diffStampAccept.style.transform = `rotate(-14deg) scale(${0.8 + factor * 0.35})`;
+        }
+        if (diffStampReject) diffStampReject.style.opacity = '0';
+      } else if (dx < -25) {
+        const factor = Math.min((Math.abs(dx) - 25) / 95, 1);
+        if (diffStampReject) {
+          diffStampReject.style.opacity = factor;
+          diffStampReject.style.transform = `rotate(14deg) scale(${0.8 + factor * 0.35})`;
+        }
+        if (diffStampAccept) diffStampAccept.style.opacity = '0';
+      } else {
+        if (diffStampAccept) diffStampAccept.style.opacity = '0';
+        if (diffStampReject) diffStampReject.style.opacity = '0';
+      }
+    }
+  }
+
+  function onEnd() {
+    if (!isDragging || !isSwipingHorizontal) {
+      isDragging = false;
+      isSwipingHorizontal = false;
+      return;
+    }
+
+    isDragging = false;
+    isSwipingHorizontal = false;
+
+    const threshold = Math.min(105, diffModalContent.offsetWidth * 0.26);
+
+    if (currentDeltaX > threshold) {
+      // Swiped Right -> ACCEPT
+      diffModalContent.classList.add('swipe-fly-right');
+      if (diffStampAccept) {
+        diffStampAccept.style.opacity = '1';
+        diffStampAccept.style.transform = 'rotate(-14deg) scale(1.15)';
+      }
+      setTimeout(async () => {
+        await executeAcceptChanges(true);
+        resetCardTransform();
+      }, 300);
+    } else if (currentDeltaX < -threshold) {
+      // Swiped Left -> REJECT
+      diffModalContent.classList.add('swipe-fly-left');
+      if (diffStampReject) {
+        diffStampReject.style.opacity = '1';
+        diffStampReject.style.transform = 'rotate(14deg) scale(1.15)';
+      }
+      setTimeout(async () => {
+        await executeRejectChanges(true);
+        resetCardTransform();
+      }, 300);
+    } else {
+      // Below threshold -> Elastic Snap-Back
+      diffModalContent.classList.add('swipe-reset');
+      if (diffStampAccept) diffStampAccept.style.opacity = '0';
+      if (diffStampReject) diffStampReject.style.opacity = '0';
+      setTimeout(() => {
+        resetCardTransform();
+      }, 300);
+    }
+  }
+
+  diffModalContent.addEventListener('touchstart', onStart, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('touchend', onEnd);
+  window.addEventListener('touchcancel', onEnd);
+
+  diffModalContent.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
 }
 
 export function initDiffView() {
@@ -165,7 +321,10 @@ export function initDiffView() {
 
   if (closeDiffModalBtn) closeDiffModalBtn.addEventListener('click', () => {
     if (diffModal) diffModal.style.display = 'none';
+    resetCardTransform();
   });
   if (modalRejectBtn) modalRejectBtn.addEventListener('click', handleRejectChanges);
   if (modalAcceptBtn) modalAcceptBtn.addEventListener('click', handleAcceptChanges);
+
+  initSwipeGestures();
 }

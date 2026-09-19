@@ -1150,11 +1150,85 @@ textarea#prompt-input:focus {
    Workspace Diff Viewer Modal
    ========================================================================== */
 .diff-modal-content {
+  position: relative;
   width: 95%;
   max-width: 680px;
   height: 82vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  touch-action: pan-y;
+  will-change: transform, opacity;
+}
+
+/* Tinder-Style Swipe Stamps */
+.diff-stamp {
+  position: absolute;
+  top: 75px;
+  padding: 6px 18px;
+  font-family: var(--font-ui);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.08s ease-out, transform 0.08s ease-out;
+  text-transform: uppercase;
+}
+
+.diff-stamp.accept {
+  left: 20px;
+  color: #10b981;
+  border: 3px solid #10b981;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.2);
+  transform: rotate(-14deg);
+}
+
+.diff-stamp.reject {
+  right: 20px;
+  color: #ef4444;
+  border: 3px solid #ef4444;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.2);
+  transform: rotate(14deg);
+}
+
+.diff-swipe-hint {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.diff-swipe-divider {
+  opacity: 0.4;
+}
+
+/* Fly-out & Reset Transitions */
+.diff-modal-content.swipe-fly-right {
+  transform: translate3d(140vw, 0, 0) rotate(28deg) !important;
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.35s ease !important;
+}
+
+.diff-modal-content.swipe-fly-left {
+  transform: translate3d(-140vw, 0, 0) rotate(-28deg) !important;
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.35s ease !important;
+}
+
+.diff-modal-content.swipe-reset {
+  transform: translate3d(0, 0, 0) rotate(0deg) !important;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
 .diff-header-info {
