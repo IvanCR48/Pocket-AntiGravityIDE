@@ -27,6 +27,7 @@
   ],
   "scripts": {
     "start": "node src/server.js",
+    "setup": "bin\\install.bat",
     "app": "bin\\start.bat",
     "stop": "bin\\stop.bat",
     "dashboard": "bin\\dashboard.bat",
