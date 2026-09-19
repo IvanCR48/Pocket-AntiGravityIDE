@@ -123,40 +123,72 @@
 
   <!-- Workspace Diff Viewer Modal -->
   <div id="diff-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content diff-modal-content">
-      <!-- Tinder-Style Swipe Stamps -->
-      <div id="diff-stamp-accept" class="diff-stamp accept">ACCEPT</div>
-      <div id="diff-stamp-reject" class="diff-stamp reject">REJECT</div>
-
-      <div class="modal-header">
-        <div class="diff-header-info">
-          <span class="modal-title">Review Workspace Changes</span>
-          <span id="diff-modal-stats" class="diff-modal-stats">(0 files)</span>
+    <!-- Deck Wrapper to hold stack backdrop and active card -->
+    <div class="diff-deck-wrapper">
+      <!-- Ghost Card Stack Backdrop -->
+      <div id="diff-stack-backdrop" class="diff-stack-backdrop" style="display: none;">
+        <div class="diff-stack-info">
+          <span class="diff-stack-icon">📄</span>
+          <span id="diff-stack-next-file" class="diff-stack-title">Next: file.js</span>
         </div>
-        <button id="close-diff-modal-btn" class="btn-close">✕</button>
       </div>
 
-      <!-- Swipe Gesture Hint Bar -->
-      <div class="diff-swipe-hint">
-        <span>👈 Swipe Left to Reject</span>
-        <span class="diff-swipe-divider">•</span>
-        <span>Swipe Right to Accept 👉</span>
-      </div>
+      <!-- Active Tinder Diff Card -->
+      <div class="modal-content diff-modal-content">
+        <!-- Top Drag Handle Pill -->
+        <div class="diff-drag-handle-pill"></div>
 
-      <!-- Changed Files Tab Selector -->
-      <div id="diff-files-bar" class="diff-files-bar">
-        <!-- File chips rendered dynamically -->
-      </div>
+        <!-- Tinder-Style Swipe Stamps -->
+        <div id="diff-stamp-accept" class="diff-stamp accept">ACCEPT</div>
+        <div id="diff-stamp-reject" class="diff-stamp reject">REJECT</div>
 
-      <!-- Formatted Diff Container -->
-      <div id="diff-body-container" class="diff-body-container">
-        <div class="loading-state">Loading diffs...</div>
-      </div>
+        <div class="modal-header">
+          <div class="diff-header-info">
+            <span class="modal-title">Review Changes</span>
+            <span id="diff-card-counter" class="diff-card-counter">Card 1/1</span>
+          </div>
+          <button id="close-diff-modal-btn" class="btn-close">✕</button>
+        </div>
 
-      <!-- Modal Footer with Accept / Reject Actions -->
-      <div class="diff-modal-footer">
-        <button id="modal-reject-btn" class="btn-diff-action danger">Reject All</button>
-        <button id="modal-accept-btn" class="btn-diff-action success">Accept All</button>
+        <!-- Current File Header Banner -->
+        <div class="diff-current-file-bar">
+          <span id="diff-active-filename" class="diff-active-filename">file.js</span>
+          <span id="diff-active-stats" class="diff-active-stats">+0 / -0</span>
+        </div>
+
+        <!-- Swipe Gesture Hint Bar -->
+        <div class="diff-swipe-hint">
+          <span>👈 Swipe Left to Discard</span>
+          <span class="diff-swipe-divider">•</span>
+          <span>Swipe Right to Accept 👉</span>
+        </div>
+
+        <!-- Changed Files Tab Selector -->
+        <div id="diff-files-bar" class="diff-files-bar">
+          <!-- File chips rendered dynamically -->
+        </div>
+
+        <!-- Formatted Diff Container -->
+        <div id="diff-body-container" class="diff-body-container">
+          <div class="loading-state">Loading diffs...</div>
+        </div>
+
+        <!-- Floating Tinder Circular Action Buttons -->
+        <div class="diff-fab-row">
+          <button id="fab-diff-reject" class="diff-fab-btn reject" title="Discard this file (Swipe Left)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <div class="diff-fab-label">Tap or Swipe Card</div>
+          <button id="fab-diff-accept" class="diff-fab-btn accept" title="Accept this file (Swipe Right)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </button>
+        </div>
+
+        <!-- Modal Footer with Accept / Reject Actions -->
+        <div class="diff-modal-footer">
+          <button id="modal-reject-btn" class="btn-diff-action danger">Reject All</button>
+          <button id="modal-accept-btn" class="btn-diff-action success">Accept All</button>
+        </div>
       </div>
     </div>
   </div>
