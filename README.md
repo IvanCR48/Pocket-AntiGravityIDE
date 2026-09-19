@@ -8,108 +8,109 @@
 
   # Pocket Antigravity IDE
 
-  **Controlás tu Antigravity IDE desde el celular sin instalar plugins ni configurar extensiones.**
+  **Control Antigravity IDE from your phone with zero plugins or extensions.**
 
   <p align="center">
-    <a href="#cómo-correrlo"><img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows" alt="Windows"></a>
-    <a href="#cómo-correrlo"><img src="https://img.shields.io/badge/Interface-Mobile%20Web-007acc?style=flat-square&logo=visualstudiocode" alt="VS Code UI"></a>
-    <a href="#cómo-correrlo"><img src="https://img.shields.io/badge/Access-HTTPS%20Tunnel-F38020?style=flat-square&logo=cloudflare" alt="Cloudflare"></a>
-    <a href="#licencia"><img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License"></a>
+    <a href="#quick-start-in-3-steps"><img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows" alt="Windows"></a>
+    <a href="#quick-start-in-3-steps"><img src="https://img.shields.io/badge/Interface-Mobile%20PWA-007acc?style=flat-square&logo=visualstudiocode" alt="VS Code UI"></a>
+    <a href="#quick-start-in-3-steps"><img src="https://img.shields.io/badge/Access-HTTPS%20Tunnel-F38020?style=flat-square&logo=cloudflare" alt="Cloudflare"></a>
+    <a href="#license"><img src="https://img.shields.io/badge/License-MIT-purple?style=flat-square" alt="License"></a>
   </p>
 
 </div>
 
 ---
 
-## Por qué existe esto
+## Why this exists
 
-Me pasaba todo el tiempo: le pedís al agente de Antigravity una refactorización grande o implementar un módulo completo, y el modelo se queda 2 o 3 minutos pensando, editando archivos y ejecutando comandos.
+It happened to me all the time: you ask Antigravity's agent for a major refactoring or to implement an entire module from scratch, and it spends 2 to 3 minutes thinking, editing files, and running commands in the background.
 
-En ese rato te levantás a buscar un café o vas al living, pero para ver si terminó, responderle una duda o aceptar los cambios que propone, tenés que volver a sentarte frente a la PC.
+During that time, you get up to grab a coffee or relax on the couch. But just to see if it finished, answer a clarifying question, or review the proposed code diffs, you have to walk back and sit at your desk.
 
-Armé **Pocket Antigravity** para resolver exactamente eso:
-* Poder revisar desde el celular los archivos que el agente modificó línea por línea con diffs en verde y rojo.
-* Tocar **Accept All** (`Alt + Enter`) o **Reject** directamente en la pantalla de tu teléfono.
-* Mandarle el siguiente prompt de voz, una foto de un error en pantalla o adjuntar un archivo del proyecto sin estar clavado al escritorio.
+I built **Pocket Antigravity** to solve that exact annoyance:
+* Review the files modified by the agent line-by-line with syntax-highlighted red/green diffs right on your phone.
+* Tap **Accept All** (`Alt + Enter`) or **Reject All** with one touch from your screen.
+* Send the next prompt, snap a photo of an error on your display, or attach project files without being tied to your desk.
 
-Todo esto **sin instalar extensiones propietarias**: corre sobre Windows de forma nativa interactuando directamente con el sistema operativo.
-
----
-
-## Lo que podés hacer (Features clave)
-
-* **Desktop Control Center (Dashboard Host)**: Interfaz de escritorio inspirada en Discord/VirtualBox (`bin/dashboard.bat` o `npm run dashboard`) con diagnóstico automatizado de dependencias (**System Doctor**), conmutador de modos de red (**Wi-Fi Local con 0ms de lag** vs **Túnel Cloudflare**), generador de códigos QR SVG y gestor de energía (**Prevent PC Sleep**).
-* **Instalable como PWA en tu celular**: Abrís la app en Chrome (Android) o Safari (iOS) y tocás "Instalar / Agregar a Inicio". Se ejecuta a pantalla completa como una app nativa sin necesidad de compilar APKs.
-* **Control remoto total**: Enviás prompts de texto, capturas de cámara o referencias a archivos de tu proyecto con un toque (`@ruta/archivo`).
-* **Selector de Personas y Roles**: Cambiá el comportamiento del asistente con chips deslizables (`⚡ Pair Dev`, `🔍 Reviewer`, `📐 Architect`, `🐛 Bug Hunter`, `🎯 Goal`, `💡 Teacher`) enriqueciendo tus prompts automáticamente sin redactar textos largos desde el celular.
-* **Revisión y aprobación de Diffs**: Si el agente toca código, aparece un banner en tu teléfono con las estadísticas (`+14 / -3`). Abrís el visor con sintaxis a color y aceptás o descartás los cambios con 1 toque.
-* **Streaming en tiempo real**: Ves exactamente lo que el agente va pensando y respondiendo en vivo mediante WebSockets directos.
-* **Explorador de tu proyecto**: Navegás el árbol de archivos de tu repositorio y ves el código fuente con syntax highlighting desde el teléfono.
-* **Acceso seguro con PIN**: Conexión cifrada protegida por HMAC token de 24h y rate-limiting contra fuerza bruta (5 intentos fallidos = 5 minutos de bloqueo).
+All of this **without installing any proprietary extensions**: it runs natively on Windows by interacting directly with the operating system.
 
 ---
 
-## Cómo correrlo (En 3 pasos)
+## What you can do (Key Features)
 
-### 1. Clonar e instalar
+* **Desktop Control Center (Dashboard Host)**: Desktop GUI inspired by modern control centers (`bin/dashboard.bat` or `npm run dashboard`) featuring automated dependency diagnostics (**System Doctor**), connection mode switcher (**Local Wi-Fi with 0ms lag** vs **Global Cloudflare Tunnel**), dynamic SVG QR codes, and power management (**Prevent PC Sleep**).
+* **Installable as a Mobile PWA**: Open the web companion in Chrome (Android) or Safari (iOS) and tap "Add to Home Screen". Runs full-screen just like a native app without compiling APKs or dealing with app stores.
+* **Full Remote Control**: Send prompts, snap camera photos of errors, or reference project files with a tap (`@path/to/file`).
+* **Assistant Persona & Role Switcher**: Change agent behavior instantly with smooth scrolling chips (`⚡ Pair Dev`, `🔍 Reviewer`, `📐 Architect`, `🐛 Bug Hunter`, `🎯 Goal`, `💡 Teacher`), automatically enriching your prompts with expert directives without typing lengthy preambles on mobile.
+* **Remote Code Diff Review**: As soon as the agent touches code, a floating banner appears on your phone with live stats (`+14 / -3`). Inspect unified diffs with color-coded syntax and accept or discard changes with 1 tap.
+* **Real-Time Streaming**: Watch the agent's step-by-step reasoning and responses stream live over reactive WebSockets.
+* **Workspace File Explorer**: Browse your project repository tree and preview source code files with mobile syntax highlighting.
+* **PIN Security & Rate Limiting**: Encrypted HMAC token authentication with 24-hour sessions and brute-force protection (5 failed attempts = 5-minute lockout).
+
+---
+
+## Quick Start (in 3 steps)
+
+### 1. Clone & Install
 ```bash
 git clone https://github.com/IvanCR48/Pocket-AntiGravityIDE.git
 cd Pocket-AntiGravityIDE
-npm install
+npm run setup
 ```
+*(You can also double-click **`bin/install.bat`** to check and install only missing packages without redownloading existing modules).*
 
-### 2. Iniciar el Control Center o el Servidor
-Tenés dos formas de usarlo:
+### 2. Launch the Control Center or the Server
+Choose how you want to run it:
 
-* **Opción A (Recomendada - Control Center de Escritorio)**:
-  Hacé doble click en **`bin/dashboard.bat`** (o ejecutá `npm run dashboard`).
-  Se abre una ventana estilo Discord con el **System Doctor**, tu QR de Wi-Fi local para conectar al instante con cero lag, y el switch para prender el túnel público cuando salís de tu casa.
+* **Option A (Recommended - Desktop Control Center)**:
+  Double-click **`bin/dashboard.bat`** (or run `npm run dashboard`).
+  Opens a desktop window with the **System Doctor**, your local Wi-Fi QR code for zero-lag instant connection, and a one-click toggle for public tunnels when away from home.
 
-* **Opción B (Lanzador Rápido)**:
-  Hacé doble click en **`bin/start.bat`** (o ejecutá `npm run app`).
-  Inicia el servidor y el túnel en segundo plano mostrando el QR en terminal.
+* **Option B (Quick CLI Launcher)**:
+  Double-click **`bin/start.bat`** (or run `npm run app`).
+  Starts the server and shows an interactive terminal menu with QR code and failover tunnel management.
 
-### 3. Conectar desde el celular (PWA)
-1. Escaneá el código QR con la cámara de tu celular (o abrí la URL).
-2. Ingresá tu PIN de seguridad (por defecto `1234`, configurable desde el Dashboard).
-3. **Instalación PWA**: Tocá el botón de instalar o en el menú de Safari/Chrome seleccioná **"Agregar a pantalla de inicio"** para usarlo a pantalla completa como una app nativa sin marcos de navegador.
+### 3. Connect from your Phone (PWA)
+1. Scan the QR code with your phone camera (or open the displayed URL in your mobile browser).
+2. Enter your security PIN (defaults to `1234`, configurable from the Dashboard or `pocket.config.json`).
+3. **PWA Installation**: Tap the install banner or select **"Add to Home Screen"** in Safari/Chrome to run full-screen as a standalone native app.
 
-> Para detener el servidor cuando termines, hacé doble click en **`bin/stop.bat`** (o ejecutá `npm run stop`).
-
----
-
-## Decisiones técnicas y limitaciones honestas
-
-* **¿Por qué Win32 P/Invoke en vez de un plugin de VS Code?**
-  Antigravity IDE no expone una API pública para inyectar texto en su ventana de chat. En vez de depender de parches que se rompan cada vez que el IDE se actualiza, usamos llamadas del sistema operativo (`AttachThreadInput`, `SetForegroundWindow` y `keybd_event`). El sistema localiza la ventana de Chromium/Electron y le pasa el foco de forma transparente.
-
-* **Lectura directa de transcripciones (`.jsonl`)**:
-  El servidor no hace scraping de pantalla. Lee incrementalmente los logs de razonamiento que el motor de Antigravity guarda en disco (`.gemini/antigravity-ide/brain/...`). Esto hace que el streaming al celular consuma prácticamente 0% de CPU.
-
-* **Limitaciones actuales**:
-  * Solo funciona en **Windows** (debido al inyector Win32).
-  * La ventana de Antigravity IDE debe estar abierta en la PC anfitriona.
+> To shut down the server when you are done, double-click **`bin/stop.bat`** (or run `npm run stop`).
 
 ---
 
-## Arquitectura Hexagonal (Ports & Adapters)
+## Technical Decisions & Honest Trade-offs
 
-El núcleo del sistema está desacoplado del sistema operativo y los frameworks:
+* **Why Win32 P/Invoke instead of a VS Code extension?**
+  Antigravity IDE does not expose a public API to inject text or simulate actions inside its chat window. Instead of relying on fragile patches that break with every IDE update, we leverage native Windows OS APIs (`AttachThreadInput`, `SetForegroundWindow`, and `keybd_event`). The system locates the Chromium/Electron window and transparently passes focus.
+
+* **Direct Transcript Reading (`.jsonl`)**:
+  The server does not perform screen scraping. It incrementally reads the reasoning logs saved directly to disk by Antigravity's engine (`.gemini/antigravity-ide/brain/...`). This keeps background CPU usage near 0%.
+
+* **Current Limitations**:
+  * Currently runs on **Windows** (due to the Win32 automation injector).
+  * The Antigravity IDE window must be open on the host machine.
+
+---
+
+## Hexagonal Architecture (Ports & Adapters)
+
+The application core is fully decoupled from the operating system and web frameworks:
 
 ```mermaid
 flowchart TD
-    subgraph DrivingAdapters ["Adaptadores Primarios (Entrada)"]
-        Phone[📱 Web App Móvil] -->|HTTP REST| Express[Express Controllers /api/*]
+    subgraph DrivingAdapters ["Driving Adapters (Inbound)"]
+        Phone[📱 Mobile PWA] -->|HTTP REST| Express[Express Controllers /api/*]
         Phone -->|WebSockets| WS[WebSocket Stream Handler /ws]
     end
 
-    subgraph CoreDomain ["Núcleo Hexagonal (Casos de Uso & Dominio)"]
-        Express --> UseCases[Casos de Uso: SendPrompt / ReviewChanges / ManageSessions]
+    subgraph CoreDomain ["Hexagonal Core (Use Cases & Domain)"]
+        Express --> UseCases[Use Cases: SendPrompt / ReviewChanges / ManageSessions]
         WS --> UseCases
-        UseCases --> Ports["Puertos (Interfaces): IdeAutomationPort / VcsPort / TranscriptPort"]
+        UseCases --> Ports["Ports (Interfaces): IdeAutomationPort / VcsPort / TranscriptPort"]
     end
 
-    subgraph DrivenAdapters ["Adaptadores Secundarios (Salida / Infraestructura)"]
+    subgraph DrivenAdapters ["Driven Adapters (Outbound / Infrastructure)"]
         Ports -->|IdeAutomationPort| Win32Adapter[Win32 Automation Adapter / P-Invoke]
         Ports -->|VcsPort| GitAdapter[Git CLI Adapter / Status, Diff, Restore]
         Ports -->|TranscriptPort| JsonlAdapter[JSONL Transcript Adapter / Disk Tail Watcher]
@@ -118,24 +119,25 @@ flowchart TD
 
 ---
 
-## Atajos útiles
+## Useful Shortcuts
 
-Si querés conocer todos los atajos internos del IDE, creamos una guía completa en [ANTIGRAVITY_SHORTCUTS.md](ANTIGRAVITY_SHORTCUTS.md).
+If you want to master all internal shortcuts for the IDE, check out our guide in [ANTIGRAVITY_SHORTCUTS.md](ANTIGRAVITY_SHORTCUTS.md).
 
 ---
 
 ## Roadmap
 
-- [x] Control remoto de prompts (texto y fotos).
-- [x] Streaming de chat en vivo con WebSockets.
-- [x] Explorador de archivos del proyecto con visor de código.
-- [x] Protección por PIN de seguridad de 4 dígitos.
-- [x] Visor de diffs móvil con acciones remotas (Accept All / Reject All).
-- [x] Selector de asistentes y personas (Code Reviewer, Arquitecto, Debugger).
-- [ ] Atajo de dictado por voz directo al prompt.
+- [x] Remote prompt control (text & photos).
+- [x] Real-time chat streaming with WebSockets.
+- [x] Workspace file explorer with syntax-highlighted code viewer.
+- [x] 4-digit PIN security lockscreen with HMAC authentication.
+- [x] Remote diff review modal with one-tap actions (Accept All / Reject All).
+- [x] Assistant persona switcher (Pair Dev, Code Reviewer, Architect, Debugger, Teacher).
+- [x] Desktop Control Center & automated System Doctor diagnostics.
+- [ ] Direct voice dictation shortcut (Web Speech API).
 
 ---
 
-## Licencia
+## License
 
-MIT License — Creado por [IvanCR48](https://github.com/IvanCR48). Podés usarlo, modificarlo y compartirlo libremente.
+MIT License — Created by [IvanCR48](https://github.com/IvanCR48). Free to use, modify, and share.
