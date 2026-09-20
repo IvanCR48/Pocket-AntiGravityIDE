@@ -92,5 +92,52 @@ describe('ReviewChangesUseCase Isolation', () => {
     assert.strictEqual(ideAcceptHunkCalled, true);
     assert.strictEqual(vcsAcceptAllCalled, true);
   });
+
+  it('commitChanges delegates to vcs.commit and optionally pushes', async () => {
+    let commitCalledWith = null;
+    let pushCalledWith = null;
+
+    const mockVcs = {
+      commit: async (root, msg) => {
+        commitCalledWith = { root, msg };
+        return { success: true, commitHash: 'abc1234', message: msg };
+      },
+      push: async (root, remote, branch) => {
+        pushCalledWith = { root, remote, branch };
+        return { success: true, output: 'Everything up-to-date' };
+      }
+    };
+
+    const useCase = new ReviewChangesUseCase({ vcsPort: mockVcs });
+
+    // 1. Commit only
+    const resNoPush = await useCase.commitChanges('/fake/root', { message: 'feat: new feature', push: false });
+    assert.strictEqual(resNoPush.success, true);
+    assert.strictEqual(resNoPush.pushed, false);
+    assert.deepStrictEqual(commitCalledWith, { root: '/fake/root', msg: 'feat: new feature' });
+    assert.strictEqual(pushCalledWith, null);
+
+    // 2. Commit and push
+    const resPush = await useCase.commitChanges('/fake/root', { message: 'feat: ship feature', push: true });
+    assert.strictEqual(resPush.success, true);
+    assert.strictEqual(resPush.pushed, true);
+    assert.deepStrictEqual(pushCalledWith, { root: '/fake/root', remote: 'origin', branch: undefined });
+  });
+
+  it('generates smart conventional commit suggestions based on modified files', () => {
+    const adapter = new GitAdapter();
+    assert.strictEqual(
+      adapter.generateSuggestedCommitMessage(['tests/unit/test.js']),
+      'test: add and update test suites'
+    );
+    assert.strictEqual(
+      adapter.generateSuggestedCommitMessage(['public/index.html']),
+      'feat(ui): update index.html'
+    );
+    assert.strictEqual(
+      adapter.generateSuggestedCommitMessage(['README.md', 'docs/guide.md']),
+      'docs: update project documentation and guides'
+    );
+  });
 });
 

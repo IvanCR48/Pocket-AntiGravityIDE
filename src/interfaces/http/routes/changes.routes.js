@@ -43,6 +43,55 @@ function createChangesRoutes({ reviewChangesUseCase, onChangesBroadcast }) {
     }
   });
 
+  router.get('/staged', requireAuth, async (req, res) => {
+    try {
+      const root = getActiveWorkspaceRoot();
+      const [stagedChanges, branchInfo, suggestedMessage] = await Promise.all([
+        reviewChangesUseCase.getStagedChanges(root),
+        reviewChangesUseCase.getBranchInfo(root),
+        reviewChangesUseCase.getCommitSuggestion(root)
+      ]);
+
+      res.json({
+        staged: stagedChanges,
+        branch: branchInfo,
+        suggestedMessage
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/commit', requireAuth, async (req, res) => {
+    try {
+      const root = getActiveWorkspaceRoot();
+      const { message, push = true, remote, branch } = req.body || {};
+
+      if (!message || !message.trim()) {
+        return res.status(400).json({ success: false, error: 'Commit message is required.' });
+      }
+
+      const result = await reviewChangesUseCase.commitChanges(root, {
+        message: message.trim(),
+        push: Boolean(push),
+        remote,
+        branch
+      });
+
+      if (typeof onChangesBroadcast === 'function') {
+        onChangesBroadcast();
+      }
+
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   return router;
 }
 
