@@ -58,8 +58,8 @@ if (tabChatBtn && tabFilesBtn && chatContainer && filesContainer) {
 
 function startApp() {
   initWebSocket({
-    onChangesUpdated: (changes) => {
-      updateChangesBanner(changes);
+    onChangesUpdated: () => {
+      checkChanges();
     },
     onTranscriptStep: (data) => {
       if (getActiveSessionId() === 'NEW_PENDING_SESSION') {
@@ -73,8 +73,8 @@ function startApp() {
       if (chatContainer) chatContainer.innerHTML = '';
       loadSessions();
     },
-    onInit: (data) => {
-      if (data.changes) updateChangesBanner(data.changes);
+    onInit: () => {
+      checkChanges();
     }
   });
 
@@ -107,4 +107,7 @@ checkAuthStatus().then((isAuthed) => {
     startApp();
   }
 });
+
+// Demo Card 3: Ready for Swipe Review
+
 

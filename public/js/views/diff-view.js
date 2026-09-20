@@ -1,11 +1,14 @@
 import { authFetch } from '../auth.js';
+import { showToast } from './chat-view.js';
 
 let currentChanges = null;
+let currentStagedChanges = null;
 let selectedDiffFileIndex = 0;
 
 const changesBanner = document.getElementById('changes-banner');
 const changesSummaryText = document.getElementById('changes-summary-text');
 const btnReviewDiffs = document.getElementById('btn-review-diffs');
+const btnCommitStagedBanner = document.getElementById('btn-commit-staged-banner');
 const btnRejectChanges = document.getElementById('btn-reject-changes');
 const btnAcceptChanges = document.getElementById('btn-accept-changes');
 
@@ -28,6 +31,17 @@ const diffStackBackdrop = document.getElementById('diff-stack-backdrop');
 const diffStackNextFile = document.getElementById('diff-stack-next-file');
 const fabDiffReject = document.getElementById('fab-diff-reject');
 const fabDiffAccept = document.getElementById('fab-diff-accept');
+
+// Commit Bottom Sheet Elements
+const commitSheetModal = document.getElementById('commit-sheet-modal');
+const closeCommitSheetBtn = document.getElementById('close-commit-sheet-btn');
+const commitBranchBadge = document.getElementById('commit-branch-badge');
+const commitStagedCountLabel = document.getElementById('commit-staged-count-label');
+const commitStagedStats = document.getElementById('commit-staged-stats');
+const commitStagedFilesList = document.getElementById('commit-staged-files-list');
+const commitMessageInput = document.getElementById('commit-message-input');
+const commitPushCheckbox = document.getElementById('commit-push-checkbox');
+const btnExecuteCommit = document.getElementById('btn-execute-commit');
 
 // ----------------------------------------------------
 // 1. Subtle & Smooth Web Audio Synthesizer
@@ -112,19 +126,29 @@ function triggerHaptic(duration = 15) {
 // ----------------------------------------------------
 // 2. Diff View Rendering & Deck State
 // ----------------------------------------------------
-export function updateChangesBanner(changes) {
-  currentChanges = changes;
+export function updateChangesBanner(changes, stagedData) {
+  if (changes !== undefined) currentChanges = changes;
+  if (stagedData !== undefined) currentStagedChanges = stagedData;
+
   if (!changesBanner) return;
 
   const isModalOpen = diffModal && diffModal.style.display === 'flex';
+  const hasUnstaged = currentChanges && currentChanges.hasChanges && currentChanges.files && currentChanges.files.length > 0;
+  const stagedCount = (currentStagedChanges && currentStagedChanges.staged && currentStagedChanges.staged.files)
+    ? currentStagedChanges.staged.files.length
+    : 0;
 
-  if (changes && changes.hasChanges && changes.files && changes.files.length > 0) {
-    const count = changes.summary ? changes.summary.files : changes.files.length;
-    const add = changes.summary ? changes.summary.additions : changes.files.reduce((acc, f) => acc + f.additions, 0);
-    const del = changes.summary ? changes.summary.deletions : changes.files.reduce((acc, f) => acc + f.deletions, 0);
+  if (hasUnstaged) {
+    const count = currentChanges.summary ? currentChanges.summary.files : currentChanges.files.length;
+    const add = currentChanges.summary ? currentChanges.summary.additions : currentChanges.files.reduce((acc, f) => acc + f.additions, 0);
+    const del = currentChanges.summary ? currentChanges.summary.deletions : currentChanges.files.reduce((acc, f) => acc + f.deletions, 0);
     if (changesSummaryText) {
       changesSummaryText.textContent = `${count} file${count > 1 ? 's' : ''} modified (+${add} / -${del})`;
     }
+    if (btnReviewDiffs) btnReviewDiffs.style.display = 'inline-flex';
+    if (btnCommitStagedBanner) btnCommitStagedBanner.style.display = stagedCount > 0 ? 'inline-flex' : 'none';
+    if (btnRejectChanges) btnRejectChanges.style.display = 'inline-flex';
+    if (btnAcceptChanges) btnAcceptChanges.style.display = 'inline-flex';
     changesBanner.style.display = 'flex';
 
     if (isModalOpen) {
@@ -134,10 +158,23 @@ export function updateChangesBanner(changes) {
       renderDiffFileTabs();
       renderSelectedFileDiff();
     }
+  } else if (stagedCount > 0) {
+    // Only staged files ready for commit
+    if (changesSummaryText) {
+      changesSummaryText.textContent = `${stagedCount} file${stagedCount > 1 ? 's' : ''} staged for commit`;
+    }
+    if (btnReviewDiffs) btnReviewDiffs.style.display = 'none';
+    if (btnCommitStagedBanner) btnCommitStagedBanner.style.display = 'inline-flex';
+    if (btnRejectChanges) btnRejectChanges.style.display = 'none';
+    if (btnAcceptChanges) btnAcceptChanges.style.display = 'none';
+    changesBanner.style.display = 'flex';
+
+    if (isModalOpen) {
+      renderSelectedFileDiff();
+    }
   } else {
     changesBanner.style.display = 'none';
     if (isModalOpen) {
-      // If modal was open and files reached 0, render the celebration state smoothly
       renderSelectedFileDiff();
     }
   }
@@ -145,9 +182,13 @@ export function updateChangesBanner(changes) {
 
 export async function checkChanges() {
   try {
-    const res = await authFetch('/api/changes');
-    const data = await res.json();
-    updateChangesBanner(data);
+    const [resUnstaged, resStaged] = await Promise.all([
+      authFetch('/api/changes'),
+      authFetch('/api/changes/staged')
+    ]);
+    const dataUnstaged = await resUnstaged.json();
+    const dataStaged = await resStaged.json();
+    updateChangesBanner(dataUnstaged, dataStaged);
   } catch (_) {}
 }
 
@@ -201,15 +242,40 @@ export function renderSelectedFileDiff() {
   if (!diffBodyContainer) return;
 
   if (!currentChanges || !currentChanges.files || currentChanges.files.length === 0) {
-    // Celebratory all-reviewed state
-    diffBodyContainer.innerHTML = `
-      <div style="text-align: center; padding: 48px 16px; margin: auto;">
-        <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
-        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-bright); margin-bottom: 6px;">All Changes Reviewed!</div>
-        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">Workspace is clean and up to date.</div>
-        <button id="diff-all-reviewed-close-btn" class="btn-diff-action success" style="max-width: 140px; margin: 0 auto; display: block;">Close</button>
-      </div>
-    `;
+    const stagedCount = (currentStagedChanges && currentStagedChanges.staged && currentStagedChanges.staged.files)
+      ? currentStagedChanges.staged.files.length
+      : 0;
+
+    if (stagedCount > 0) {
+      diffBodyContainer.innerHTML = `
+        <div style="text-align: center; padding: 40px 16px; margin: auto;">
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
+          <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-bright); margin-bottom: 6px;">All Changes Reviewed!</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">${stagedCount} file${stagedCount > 1 ? 's' : ''} staged and ready to ship.</div>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button id="diff-open-commit-btn" class="btn-diff-action commit-cta" style="padding: 10px 18px;">📦 Commit & Push Changes</button>
+            <button id="diff-all-reviewed-close-btn" class="btn-diff-action" style="max-width: 90px;">Close</button>
+          </div>
+        </div>
+      `;
+      const commitBtn = document.getElementById('diff-open-commit-btn');
+      if (commitBtn) {
+        commitBtn.addEventListener('click', () => {
+          if (diffModal) diffModal.style.display = 'none';
+          openCommitSheet();
+        });
+      }
+    } else {
+      diffBodyContainer.innerHTML = `
+        <div style="text-align: center; padding: 48px 16px; margin: auto;">
+          <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
+          <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-bright); margin-bottom: 6px;">All Changes Reviewed!</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">Workspace is clean and up to date.</div>
+          <button id="diff-all-reviewed-close-btn" class="btn-diff-action success" style="max-width: 140px; margin: 0 auto; display: block;">Close</button>
+        </div>
+      `;
+    }
+
     const finishBtn = document.getElementById('diff-all-reviewed-close-btn');
     if (finishBtn) {
       finishBtn.addEventListener('click', () => {
@@ -638,8 +704,119 @@ export function initSwipeGestures() {
   }
 }
 
+export async function openCommitSheet() {
+  if (!commitSheetModal) return;
+
+  commitSheetModal.style.display = 'flex';
+
+  try {
+    const res = await authFetch('/api/changes/staged');
+    const data = await res.json();
+    currentStagedChanges = data;
+
+    const branch = data.branch ? data.branch.branch : 'main';
+    if (commitBranchBadge) commitBranchBadge.textContent = `🌿 ${branch}`;
+
+    const files = (data.staged && data.staged.files) ? data.staged.files : [];
+    const add = data.staged && data.staged.summary ? data.staged.summary.additions : 0;
+    const del = data.staged && data.staged.summary ? data.staged.summary.deletions : 0;
+
+    if (commitStagedCountLabel) commitStagedCountLabel.textContent = `Staged Files (${files.length})`;
+    if (commitStagedStats) commitStagedStats.textContent = `+${add} / -${del}`;
+
+    if (commitStagedFilesList) {
+      commitStagedFilesList.innerHTML = '';
+      if (files.length === 0) {
+        commitStagedFilesList.innerHTML = '<div style="color:var(--text-muted);font-size:0.75rem;padding:6px 0;">No files currently staged.</div>';
+      } else {
+        files.forEach(f => {
+          const chip = document.createElement('div');
+          chip.className = 'commit-staged-file-chip';
+          chip.innerHTML = `
+            <span>📄 ${f.file}</span>
+            <span class="diff-file-chip-add">+${f.additions}</span>
+            <span class="diff-file-chip-del">-${f.deletions}</span>
+          `;
+          commitStagedFilesList.appendChild(chip);
+        });
+      }
+    }
+
+    if (commitMessageInput && (!commitMessageInput.value || commitMessageInput.value.trim() === '')) {
+      commitMessageInput.value = data.suggestedMessage || '';
+    }
+  } catch (err) {
+    console.warn('Failed to load staged info:', err);
+  }
+}
+
+export async function executeCommitAndPush() {
+  const message = commitMessageInput ? commitMessageInput.value.trim() : '';
+  if (!message) {
+    showToast('Please enter a commit message.', 'warning');
+    if (commitMessageInput) commitMessageInput.focus();
+    return;
+  }
+
+  const push = commitPushCheckbox ? commitPushCheckbox.checked : true;
+  const btnText = btnExecuteCommit ? btnExecuteCommit.querySelector('.btn-commit-text') : null;
+  const btnSpinner = btnExecuteCommit ? btnExecuteCommit.querySelector('.btn-commit-spinner') : null;
+
+  if (btnExecuteCommit) btnExecuteCommit.disabled = true;
+  if (btnText) btnText.style.display = 'none';
+  if (btnSpinner) btnSpinner.style.display = 'inline-block';
+
+  try {
+    const res = await authFetch('/api/changes/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, push })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      playSubtleAcceptSound();
+      triggerHaptic(25);
+      showToast(`🎉 Committed ${data.commitHash} ${data.pushed ? '& pushed to origin!' : 'locally!'}`, 'success');
+
+      if (commitSheetModal) commitSheetModal.style.display = 'none';
+      if (commitMessageInput) commitMessageInput.value = '';
+      await checkChanges();
+    } else {
+      showToast(`Commit failed: ${data.error}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Error: ${err.message}`, 'error');
+  } finally {
+    if (btnExecuteCommit) btnExecuteCommit.disabled = false;
+    if (btnText) btnText.style.display = 'inline-block';
+    if (btnSpinner) btnSpinner.style.display = 'none';
+  }
+}
+
+function initCommitPrefixButtons() {
+  const pills = document.querySelectorAll('.commit-prefix-pill');
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const prefix = pill.dataset.prefix;
+      if (!commitMessageInput) return;
+      const current = commitMessageInput.value.trim();
+      const match = current.match(/^(\w+)(?:\(([^)]+)\))?:\s*(.*)$/);
+      if (match) {
+        const scope = match[2] ? `(${match[2]})` : '';
+        const rest = match[3];
+        commitMessageInput.value = `${prefix}${scope}: ${rest}`;
+      } else {
+        commitMessageInput.value = current ? `${prefix}: ${current}` : `${prefix}: `;
+      }
+      commitMessageInput.focus();
+    });
+  });
+}
+
 export function initDiffView() {
   if (btnReviewDiffs) btnReviewDiffs.addEventListener('click', openDiffModal);
+  if (btnCommitStagedBanner) btnCommitStagedBanner.addEventListener('click', openCommitSheet);
   if (btnRejectChanges) btnRejectChanges.addEventListener('click', () => executeRejectAll(false));
   if (btnAcceptChanges) btnAcceptChanges.addEventListener('click', () => executeAcceptAll(false));
 
@@ -650,6 +827,17 @@ export function initDiffView() {
   if (modalRejectBtn) modalRejectBtn.addEventListener('click', () => executeRejectAll(false));
   if (modalAcceptBtn) modalAcceptBtn.addEventListener('click', () => executeAcceptAll(false));
 
+  if (closeCommitSheetBtn && commitSheetModal) {
+    closeCommitSheetBtn.addEventListener('click', () => {
+      commitSheetModal.style.display = 'none';
+    });
+  }
+
+  if (btnExecuteCommit) {
+    btnExecuteCommit.addEventListener('click', executeCommitAndPush);
+  }
+
+  initCommitPrefixButtons();
   initSwipeGestures();
 }
 

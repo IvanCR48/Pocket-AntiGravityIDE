@@ -197,6 +197,62 @@
     </div>
   </div>
 
+  <!-- Git Commit & Push Bottom Sheet Modal -->
+  <div id="commit-sheet-modal" class="modal-overlay commit-sheet-overlay" style="display: none;">
+    <div class="commit-sheet-content">
+      <!-- Drag handle -->
+      <div class="commit-drag-handle"></div>
+
+      <!-- Sheet Header -->
+      <div class="commit-sheet-header">
+        <div class="commit-header-left">
+          <span class="commit-sheet-title">📦 Commit & Push</span>
+          <span id="commit-branch-badge" class="commit-branch-badge">🌿 main</span>
+        </div>
+        <button id="close-commit-sheet-btn" class="btn-close">✕</button>
+      </div>
+
+      <!-- Staged Files Summary Section -->
+      <div class="commit-staged-section">
+        <div class="commit-staged-header">
+          <span id="commit-staged-count-label" class="commit-staged-count-label">Staged Files (0)</span>
+          <span id="commit-staged-stats" class="commit-staged-stats">+0 / -0</span>
+        </div>
+        <div id="commit-staged-files-list" class="commit-staged-files-list">
+          <!-- Staged file chips rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Quick Conventional Commit Prefix Chips -->
+      <div class="commit-prefix-row">
+        <span class="commit-prefix-label">Prefix:</span>
+        <button type="button" class="commit-prefix-pill" data-prefix="feat">feat</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="fix">fix</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="refactor">refactor</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="test">test</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="docs">docs</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="chore">chore</button>
+      </div>
+
+      <!-- Commit Message Input -->
+      <div class="commit-input-wrapper">
+        <textarea id="commit-message-input" rows="3" placeholder="Enter commit message... (e.g. feat(ui): add commit bottom sheet)" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Push Option & Action CTA -->
+      <div class="commit-sheet-actions">
+        <label class="commit-push-checkbox-label">
+          <input type="checkbox" id="commit-push-checkbox" checked>
+          <span>Push to origin immediately</span>
+        </label>
+        <button id="btn-execute-commit" class="btn-commit-cta">
+          <span class="btn-commit-text">⚡ Commit & Push</span>
+          <span class="btn-commit-spinner" style="display: none;">⏳ Committing...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating Changes Action Banner -->
   <div id="changes-banner" class="changes-banner" style="display: none;">
     <div class="changes-banner-left">
@@ -205,6 +261,7 @@
     </div>
     <div class="changes-banner-actions">
       <button id="btn-review-diffs" class="btn-banner-action review">Review</button>
+      <button id="btn-commit-staged-banner" class="btn-banner-action commit" style="display: none;" title="Commit Staged Changes">Commit</button>
       <button id="btn-reject-changes" class="btn-banner-action reject" title="Discard Changes">Reject</button>
       <button id="btn-accept-changes" class="btn-banner-action accept" title="Accept Changes">Accept</button>
     </div>
@@ -232,5 +289,7 @@
   </footer>
 
   <script type="module" src="js/main.js"></script>
+
+  <!-- Demo Card 1: Ready for Swipe Review -->
 </body>
 </html>
