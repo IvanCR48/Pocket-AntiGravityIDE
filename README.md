@@ -41,8 +41,10 @@ All of this **without installing any proprietary extensions**: it runs natively 
 * **Desktop Control Center (Dashboard Host)**: Desktop GUI inspired by modern control centers (`bin/dashboard.bat` or `npm run dashboard`) featuring automated dependency diagnostics (**System Doctor**), connection mode switcher (**Local Wi-Fi with 0ms lag** vs **Global Cloudflare Tunnel**), dynamic SVG QR codes, and power management (**Prevent PC Sleep**).
 * **Installable as a Mobile PWA**: Open the web companion in Chrome (Android) or Safari (iOS) and tap "Add to Home Screen". Runs full-screen just like a native app without compiling APKs or dealing with app stores.
 * **Full Remote Control**: Send prompts, snap camera photos of errors, or reference project files with a tap (`@path/to/file`).
+* **"Tinder for Code Reviews" (Swipe Gestures)**: Review git changes with tactile mobile gestures. Swipe right to Accept (`Alt+Enter` via Win32 + `git add .`) or left to Reject (`git restore`), complete with tilt physics, smooth rubber-banding, and dynamic neon green/red acceptance stamps.
+* **"Walkie-Talkie" Voice Remote**: Dictate prompts hands-free directly into the input box using the browser's native Web Speech API. Features real-time interim transcription, zero external API keys, zero cost, and an active pulsing audio visualizer.
+* **Remote Code Diff Review**: As soon as the agent touches code, a floating banner appears on your phone with live stats (`+14 / -3`). Inspect unified diffs with color-coded syntax and accept or discard changes with 1 tap or 1 swipe.
 * **Assistant Persona & Role Switcher**: Change agent behavior instantly with smooth scrolling chips (`⚡ Pair Dev`, `🔍 Reviewer`, `📐 Architect`, `🐛 Bug Hunter`, `🎯 Goal`, `💡 Teacher`), automatically enriching your prompts with expert directives without typing lengthy preambles on mobile.
-* **Remote Code Diff Review**: As soon as the agent touches code, a floating banner appears on your phone with live stats (`+14 / -3`). Inspect unified diffs with color-coded syntax and accept or discard changes with 1 tap.
 * **Real-Time Streaming**: Watch the agent's step-by-step reasoning and responses stream live over reactive WebSockets.
 * **Workspace File Explorer**: Browse your project repository tree and preview source code files with mobile syntax highlighting.
 * **PIN Security & Rate Limiting**: Encrypted HMAC token authentication with 24-hour sessions and brute-force protection (5 failed attempts = 5-minute lockout).
@@ -132,9 +134,10 @@ If you want to master all internal shortcuts for the IDE, check out our guide in
 - [x] Workspace file explorer with syntax-highlighted code viewer.
 - [x] 4-digit PIN security lockscreen with HMAC authentication.
 - [x] Remote diff review modal with one-tap actions (Accept All / Reject All).
+- [x] "Tinder for Code Reviews" (Swipe gestures for diff acceptance & rejection with tactile stamps).
+- [x] "Walkie-Talkie" voice remote dictation (native Web Speech API, zero cost).
 - [x] Assistant persona switcher (Pair Dev, Code Reviewer, Architect, Debugger, Teacher).
 - [x] Desktop Control Center & automated System Doctor diagnostics.
-- [ ] Direct voice dictation shortcut (Web Speech API).
 
 ---
 

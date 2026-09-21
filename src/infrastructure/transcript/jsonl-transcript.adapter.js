@@ -20,12 +20,15 @@ class JsonlTranscriptAdapter extends TranscriptPort {
   }
 
   watchSession(conversationId, onStep) {
+    if (typeof onStep === 'function') {
+      this.onStepCallback = onStep;
+    }
     if (!this.watcher) {
       this.watcher = new TranscriptWatcher({
         brainDir: this.brainDir,
         onNewStep: (convId, stepData) => {
-          if (typeof onStep === 'function') {
-            onStep(convId, stepData);
+          if (typeof this.onStepCallback === 'function') {
+            this.onStepCallback(convId, stepData);
           }
         }
       });

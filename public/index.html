@@ -109,43 +109,146 @@
 
   <!-- File Viewer Modal -->
   <div id="file-viewer-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+    <div class="modal-content file-modal-content">
       <div class="modal-header">
         <span id="modal-file-title" class="modal-title">file.js</span>
         <div class="modal-actions">
+          <button id="plan-approve-modal-btn" class="btn-action plan-btn-accent" style="display: none;">⚡ Approve & Proceed</button>
           <button id="attach-file-prompt-btn" class="btn-action">Attach to Prompt</button>
           <button id="close-modal-btn" class="btn-close">✕</button>
         </div>
       </div>
-      <pre id="modal-file-body" class="code-body"><code>Loading file content...</code></pre>
+      <div id="modal-file-body" class="code-body file-modal-body">Loading file content...</div>
     </div>
   </div>
 
+  <!-- Global Toast Notification -->
+  <div id="pocket-toast" class="pocket-toast" style="display: none;"></div>
+
   <!-- Workspace Diff Viewer Modal -->
   <div id="diff-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content diff-modal-content">
-      <div class="modal-header">
-        <div class="diff-header-info">
-          <span class="modal-title">Review Workspace Changes</span>
-          <span id="diff-modal-stats" class="diff-modal-stats">(0 files)</span>
+    <!-- Deck Wrapper to hold stack backdrop and active card -->
+    <div class="diff-deck-wrapper">
+      <!-- Ghost Card Stack Backdrop -->
+      <div id="diff-stack-backdrop" class="diff-stack-backdrop" style="display: none;">
+        <div class="diff-stack-info">
+          <span class="diff-stack-icon">📄</span>
+          <span id="diff-stack-next-file" class="diff-stack-title">Next: file.js</span>
         </div>
-        <button id="close-diff-modal-btn" class="btn-close">✕</button>
       </div>
 
-      <!-- Changed Files Tab Selector -->
-      <div id="diff-files-bar" class="diff-files-bar">
-        <!-- File chips rendered dynamically -->
+      <!-- Active Tinder Diff Card -->
+      <div class="modal-content diff-modal-content">
+        <!-- Top Drag Handle Pill -->
+        <div class="diff-drag-handle-pill"></div>
+
+        <!-- Tinder-Style Swipe Stamps -->
+        <div id="diff-stamp-accept" class="diff-stamp accept">ACCEPT</div>
+        <div id="diff-stamp-reject" class="diff-stamp reject">REJECT</div>
+
+        <div class="modal-header">
+          <div class="diff-header-info">
+            <span class="modal-title">Review Changes</span>
+            <span id="diff-card-counter" class="diff-card-counter">Card 1/1</span>
+          </div>
+          <button id="close-diff-modal-btn" class="btn-close">✕</button>
+        </div>
+
+        <!-- Current File Header Banner -->
+        <div class="diff-current-file-bar">
+          <span id="diff-active-filename" class="diff-active-filename">file.js</span>
+          <span id="diff-active-stats" class="diff-active-stats">+0 / -0</span>
+        </div>
+
+        <!-- Swipe Gesture Hint Bar -->
+        <div class="diff-swipe-hint">
+          <span>👈 Swipe Left to Discard</span>
+          <span class="diff-swipe-divider">•</span>
+          <span>Swipe Right to Accept 👉</span>
+        </div>
+
+        <!-- Changed Files Tab Selector -->
+        <div id="diff-files-bar" class="diff-files-bar">
+          <!-- File chips rendered dynamically -->
+        </div>
+
+        <!-- Formatted Diff Container -->
+        <div id="diff-body-container" class="diff-body-container">
+          <div class="loading-state">Loading diffs...</div>
+        </div>
+
+        <!-- Floating Tinder Circular Action Buttons -->
+        <div class="diff-fab-row">
+          <button id="fab-diff-reject" class="diff-fab-btn reject" title="Discard this file (Swipe Left)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <div class="diff-fab-label">Tap or Swipe Card</div>
+          <button id="fab-diff-accept" class="diff-fab-btn accept" title="Accept this file (Swipe Right)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </button>
+        </div>
+
+        <!-- Modal Footer with Accept / Reject Actions -->
+        <div class="diff-modal-footer">
+          <button id="modal-reject-btn" class="btn-diff-action danger">Reject All</button>
+          <button id="modal-accept-btn" class="btn-diff-action success">Accept All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Git Commit & Push Bottom Sheet Modal -->
+  <div id="commit-sheet-modal" class="modal-overlay commit-sheet-overlay" style="display: none;">
+    <div class="commit-sheet-content">
+      <!-- Drag handle -->
+      <div class="commit-drag-handle"></div>
+
+      <!-- Sheet Header -->
+      <div class="commit-sheet-header">
+        <div class="commit-header-left">
+          <span class="commit-sheet-title">📦 Commit & Push</span>
+          <span id="commit-branch-badge" class="commit-branch-badge">🌿 main</span>
+        </div>
+        <button id="close-commit-sheet-btn" class="btn-close">✕</button>
       </div>
 
-      <!-- Formatted Diff Container -->
-      <div id="diff-body-container" class="diff-body-container">
-        <div class="loading-state">Loading diffs...</div>
+      <!-- Staged Files Summary Section -->
+      <div class="commit-staged-section">
+        <div class="commit-staged-header">
+          <span id="commit-staged-count-label" class="commit-staged-count-label">Staged Files (0)</span>
+          <span id="commit-staged-stats" class="commit-staged-stats">+0 / -0</span>
+        </div>
+        <div id="commit-staged-files-list" class="commit-staged-files-list">
+          <!-- Staged file chips rendered dynamically -->
+        </div>
       </div>
 
-      <!-- Modal Footer with Accept / Reject Actions -->
-      <div class="diff-modal-footer">
-        <button id="modal-reject-btn" class="btn-diff-action danger">Reject All</button>
-        <button id="modal-accept-btn" class="btn-diff-action success">Accept All</button>
+      <!-- Quick Conventional Commit Prefix Chips -->
+      <div class="commit-prefix-row">
+        <span class="commit-prefix-label">Prefix:</span>
+        <button type="button" class="commit-prefix-pill" data-prefix="feat">feat</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="fix">fix</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="refactor">refactor</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="test">test</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="docs">docs</button>
+        <button type="button" class="commit-prefix-pill" data-prefix="chore">chore</button>
+      </div>
+
+      <!-- Commit Message Input -->
+      <div class="commit-input-wrapper">
+        <textarea id="commit-message-input" rows="3" placeholder="Enter commit message... (e.g. feat(ui): add commit bottom sheet)" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Push Option & Action CTA -->
+      <div class="commit-sheet-actions">
+        <label class="commit-push-checkbox-label">
+          <input type="checkbox" id="commit-push-checkbox" checked>
+          <span>Push to origin immediately</span>
+        </label>
+        <button id="btn-execute-commit" class="btn-commit-cta">
+          <span class="btn-commit-text">⚡ Commit & Push</span>
+          <span class="btn-commit-spinner" style="display: none;">⏳ Committing...</span>
+        </button>
       </div>
     </div>
   </div>
@@ -158,6 +261,7 @@
     </div>
     <div class="changes-banner-actions">
       <button id="btn-review-diffs" class="btn-banner-action review">Review</button>
+      <button id="btn-commit-staged-banner" class="btn-banner-action commit" style="display: none;" title="Commit Staged Changes">Commit</button>
       <button id="btn-reject-changes" class="btn-banner-action reject" title="Discard Changes">Reject</button>
       <button id="btn-accept-changes" class="btn-banner-action accept" title="Accept Changes">Accept</button>
     </div>
@@ -175,8 +279,9 @@
     </div>
     <div class="input-row">
       <button id="attach-btn" class="btn-icon" title="Attach Image/File">📷</button>
+      <button id="mic-btn" class="btn-icon" title="Voice Dictation (Walkie-Talkie)">🎙️</button>
       <input type="file" id="file-input" accept="image/*" style="display: none;">
-      <textarea id="prompt-input" rows="1" placeholder="Ask Antigravity IDE..."></textarea>
+      <textarea id="prompt-input" rows="1" placeholder="Ask Antigravity IDE..." aria-label="Prompt Input" spellcheck="false" autocomplete="off"></textarea>
       <button id="send-btn" class="btn-send" title="Send Prompt">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
@@ -184,5 +289,7 @@
   </footer>
 
   <script type="module" src="js/main.js"></script>
+
+  <!-- Demo File 1: Ready to Swipe & Commit -->
 </body>
 </html>
