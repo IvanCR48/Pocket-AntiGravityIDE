@@ -230,6 +230,9 @@ export function getActiveSessionId() {
 
 export function setActiveSessionId(id) {
   activeSessionId = id;
+  if (sessionSelect && id && id !== 'NEW_PENDING_SESSION') {
+    sessionSelect.value = id;
+  }
 }
 
 // Assistant Persona Management
@@ -299,7 +302,10 @@ export function updatePersonaBadge() {
 }
 
 // Load Sessions List
-export async function loadSessions() {
+export async function loadSessions(targetId = null) {
+  if (targetId) {
+    activeSessionId = targetId;
+  }
   if (activeSessionId === 'NEW_PENDING_SESSION') return;
   try {
     const res = await authFetch('/api/sessions');
@@ -308,20 +314,23 @@ export async function loadSessions() {
     if (!sessionSelect) return;
     sessionSelect.innerHTML = '';
     if (data.sessions && data.sessions.length > 0) {
+      const selectedId = activeSessionId || data.activeConversationId || data.sessions[0].id;
       data.sessions.forEach((s) => {
         const opt = document.createElement('option');
         opt.value = s.id;
         const dateStr = new Date(s.mtime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         opt.textContent = `Session ${s.id.substring(0, 8)} (${dateStr})`;
-        if (s.id === data.activeConversationId) {
+        if (s.id === selectedId) {
           opt.selected = true;
         }
         sessionSelect.appendChild(opt);
       });
 
       if (!activeSessionId) {
-        activeSessionId = data.activeConversationId || data.sessions[0].id;
+        activeSessionId = selectedId;
         loadMessages(activeSessionId);
+      } else {
+        sessionSelect.value = activeSessionId;
       }
     } else {
       const opt = document.createElement('option');

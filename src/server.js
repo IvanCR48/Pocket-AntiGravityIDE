@@ -54,6 +54,7 @@ const manageSessionsUseCase = new ManageSessionsUseCase({
 // Active Session State
 let activeConversationId = null;
 const initialSessions = manageSessionsUseCase.listSessions();
+const knownSessionIds = new Set(initialSessions.map((s) => s.id));
 if (initialSessions.length > 0) {
   activeConversationId = initialSessions[0].id;
 }
@@ -104,12 +105,25 @@ function startSessionWatcher(sessionId) {
 }
 if (activeConversationId) startSessionWatcher(activeConversationId);
 
-// Auto-detect new sessions on disk
+// Auto-detect genuinely brand-new sessions created on disk
 setInterval(() => {
   const sessions = manageSessionsUseCase.listSessions();
-  if (sessions.length > 0 && sessions[0].id !== activeConversationId) {
-    console.log(`[Hexagonal-Server] Auto-detected new session: ${sessions[0].id}`);
-    activeConversationId = sessions[0].id;
+  const currentIds = new Set(sessions.map((s) => s.id));
+
+  // Prune deleted sessions from knownSessionIds
+  for (const id of knownSessionIds) {
+    if (!currentIds.has(id)) {
+      knownSessionIds.delete(id);
+    }
+  }
+
+  // Find if there is a session on disk that was NOT known previously
+  const brandNewSession = sessions.find((s) => !knownSessionIds.has(s.id));
+
+  if (brandNewSession) {
+    console.log(`[Hexagonal-Server] Auto-detected brand-new session on disk: ${brandNewSession.id}`);
+    knownSessionIds.add(brandNewSession.id);
+    activeConversationId = brandNewSession.id;
     startSessionWatcher(activeConversationId);
     wsHandler.broadcast({
       type: 'SESSION_AUTO_SWITCHED',
@@ -140,6 +154,9 @@ app.use('/api/sessions', createSessionsRoutes({
   getActiveSessionId: () => activeConversationId,
   setActiveSessionId: (newId) => {
     activeConversationId = newId;
+    if (newId && newId !== 'NEW_PENDING_SESSION') {
+      knownSessionIds.add(newId);
+    }
     startSessionWatcher(newId);
   }
 }));

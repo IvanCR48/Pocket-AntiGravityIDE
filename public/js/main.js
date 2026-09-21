@@ -3,6 +3,7 @@ import { initWebSocket, closeWebSocket } from './ws-client.js';
 import {
   initChatView,
   loadSessions,
+  loadMessages,
   loadPersonas,
   appendMessageFromStep,
   getActiveSessionId,
@@ -64,14 +65,18 @@ function startApp() {
     onTranscriptStep: (data) => {
       if (getActiveSessionId() === 'NEW_PENDING_SESSION') {
         setActiveSessionId(data.conversationId);
+        loadSessions(data.conversationId);
         if (chatContainer) chatContainer.innerHTML = '';
+      }
+      if (data.conversationId && getActiveSessionId() && data.conversationId !== getActiveSessionId()) {
+        return;
       }
       appendMessageFromStep(data.step);
     },
-    onSessionAutoSwitched: (conversationId) => {
+    onSessionAutoSwitched: async (conversationId) => {
       setActiveSessionId(conversationId);
-      if (chatContainer) chatContainer.innerHTML = '';
-      loadSessions();
+      await loadSessions(conversationId);
+      await loadMessages(conversationId);
     },
     onInit: () => {
       checkChanges();
