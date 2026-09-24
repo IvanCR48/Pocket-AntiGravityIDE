@@ -1,3 +1,10 @@
+// Seguridad liviana para acceso remoto desde el celular.
+// Cero bases de datos ni servicios en la nube para autenticar una herramienta personal de escritorio:
+// usamos un token HMAC firmado con un secreto aleatorio generado en memoria (SERVER_SECRET).
+// Ventajas: ultra rápido, cero archivos residuales y si reinicias el servidor, todas las sesiones
+// activas mueren al instante.
+// Además: 5 intentos fallidos activan un bloqueo de 5 minutos para que nadie en una red Wi-Fi
+// compartida intente adivinar el PIN de 4 dígitos por fuerza bruta.
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');

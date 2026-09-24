@@ -1,14 +1,12 @@
+// Lector de streaming para los logs de Antigravity.
+// Cero scraping de pantalla ni extensiones invasivas: Antigravity vuelca todo su razonamiento
+// en un transcript.jsonl en disco. Nos colgamos de ese archivo para retransmitir los pasos en vivo al celular.
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
 const { DEFAULT_BRAIN_DIR, listSessions } = require('./reader');
 
 class TranscriptWatcher {
-  /**
-   * @param {Object} options
-   * @param {string} [options.brainDir]
-   * @param {Function} [options.onNewStep]
-   */
   constructor(options = {}) {
     this.brainDir = options.brainDir || DEFAULT_BRAIN_DIR;
     this.onNewStep = options.onNewStep || (() => {});
@@ -42,6 +40,8 @@ class TranscriptWatcher {
 
     console.log(`[Watcher] Watching transcript log: ${transcriptPath}`);
 
+    // Si la conversación ya tiene historia, clavamos el puntero al final del archivo.
+    // No queremos bombardear al celular con los 200 mensajes viejos que ya ocurrieron.
     if (fs.existsSync(transcriptPath)) {
       this.filePosition = fs.statSync(transcriptPath).size;
     } else {
@@ -52,6 +52,8 @@ class TranscriptWatcher {
       this.watcher.close();
     }
 
+    // En Windows, los eventos nativos de ReadDirectoryChangesW a veces se duermen
+    // con archivos que se abren en modo append muy rápido. Polling de 300ms nunca falla.
     this.watcher = chokidar.watch(transcriptPath, {
       persistent: true,
       usePolling: true,
@@ -67,6 +69,10 @@ class TranscriptWatcher {
       const stats = fs.statSync(filePath);
       if (stats.size <= this.filePosition) return;
 
+      // EL TRUCO QUE SALVA LA CPU:
+      // Un transcript.jsonl puede llegar a pesar 50 MB en una sesión larga.
+      // Si leyéramos todo el archivo en cada actualización, la máquina del usuario empezaría a despegar.
+      // Abrimos el stream únicamente desde this.filePosition hasta stats.size para digerir solo lo nuevo.
       const stream = fs.createReadStream(filePath, {
         start: this.filePosition,
         end: stats.size,

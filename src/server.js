@@ -32,7 +32,10 @@ const { loadConfig } = require('./infrastructure/security/pin-auth');
 const { getActiveWorkspaceRoot } = require('./infrastructure/workspace/resolver');
 
 // ----------------------------------------------------
-// 1. Dependency Injection Setup (Composition Root)
+// 1. Composition Root (El cableado de dependencias)
+// Acá se enchufa todo: instanciamos los adaptadores que tocan fierros del SO
+// (Win32, Git CLI, logs de disco) y se los inyectamos a los Casos de Uso del core.
+// Ningún endpoint HTTP toca el sistema operativo de forma directa; todo pasa por este desacoplamiento.
 // ----------------------------------------------------
 const ideAutomationAdapter = new Win32AutomationAdapter();
 const vcsAdapter = new GitAdapter();
@@ -180,7 +183,10 @@ app.get('/dashboard', (req, res) => {
 });
 
 // ----------------------------------------------------
-// 4. Start Server
+// 4. Arranque del Servidor
+// Levantamos Express + WebSockets y mostramos la URL de LAN calculada por el Doctor.
+// Si el usuario configuró "preventSleep", activamos la trampa de energía de Windows
+// para que la laptop no se suspenda a mitad de una tarea larga mientras estamos en el sillón.
 // ----------------------------------------------------
 const config = loadConfig();
 if (config.preventSleep) {

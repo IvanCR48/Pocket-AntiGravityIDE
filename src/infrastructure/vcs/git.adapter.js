@@ -1,3 +1,7 @@
+// Adaptador nativo de Git.
+// Cero librerías infladas de 15 MB como isomorphic-git ni paquetes con bindings raros de C++:
+// ejecutamos el binario `git` que ya está en el PATH del sistema usando `windowsHide: true`
+// para que no parpadee ninguna ventana negra en Windows.
 const { execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +18,10 @@ class GitAdapter extends VcsPort {
     });
   }
 
+  // Parseador de diff unificado hecho en casa.
+  // Podríamos haber metido una dependencia pesada de npm solo para colorear diffs,
+  // pero el formato "diff --git" es súper estándar: cortamos por cabeceras y contamos
+  // líneas que arrancan con '+' o '-' ignorando las marcas de archivo (+++ / ---).
   parseUnifiedDiff(rawDiff) {
     if (!rawDiff) return [];
     const fileDiffs = [];
@@ -46,6 +54,8 @@ class GitAdapter extends VcsPort {
 
   async getChanges(workspaceRoot) {
     try {
+      // Usamos `status --porcelain` obligatoriamente: si no, Git escupe texto
+      // decorado para humanos con consejos y códigos de escape ANSI que rompen el parseo.
       const statusOutput = await this.runGit(['status', '--porcelain'], workspaceRoot);
       if (!statusOutput) {
         return new WorkspaceChanges({ workspaceRoot, files: [] });
@@ -150,6 +160,9 @@ class GitAdapter extends VcsPort {
     }
   }
 
+  // Generador de Conventional Commits para cuando estás desde el celular y te da pereza escribir.
+  // Analiza las rutas de los archivos staged: si solo tocaste docs -> docs: ...,
+  // si tocaste tests -> test: ..., si tocaste CSS/HTML -> feat(ui): ...
   generateSuggestedCommitMessage(stagedFiles = []) {
     if (!stagedFiles || stagedFiles.length === 0) {
       return 'chore: update workspace files';
