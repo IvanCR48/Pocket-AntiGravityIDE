@@ -1,4 +1,9 @@
-# clipboard-injector.ps1 - Text Clipboard Injection for Antigravity IDE
+# clipboard-injector.ps1 - Inyección nativa de texto para Antigravity IDE
+# Este script es pura brujería Win32 nacida de la frustración.
+# ¿Por qué existe? Porque Antigravity no tiene una API pública abierta para escribirle al chat desde afuera.
+# Para mandar un prompt desde el celular mientras estás tirado en el sillón, tenemos que robarle el foco
+# a Windows a la fuerza, simular atajos de teclado del Command Palette y pegar en el portapapeles
+# sin romper lo que el usuario tenía copiado antes.
 param (
     [string]$Text = "",
     [string]$TargetTitle = "Antigravity IDE",
@@ -184,11 +189,14 @@ public class Win32ClipboardInjector {
     }
 
     public static void FocusChatViaCommandPalette() {
-        // 0. Send Ctrl+1 first to safely move focus out of Terminal (Ctrl+J), Output, or Chat bar into the editor
+        // 0. Mandamos Ctrl+1 para sacar el foco de la terminal integrada o de cualquier panel rebelde.
+        // Si el foco quedó en la consola o en un panel de salida, el atajo no entra o escribe basura.
         SendCtrl1();
         Thread.Sleep(150);
 
-        // 1. Command Palette "Agent: Focus on Agent View" opens & activates the Agent panel
+        // 1. Abrimos la paleta de comandos con Ctrl+Shift+P y buscamos la vista del agente.
+        // Tipearlo letra por letra por software falla la mitad de las veces por micro-lag de Electron,
+        // así que metemos el comando al portapapeles y le clavamos Ctrl+V instantáneo.
         SendCtrlShiftP();
         Thread.Sleep(150);
         Thread staThread = new Thread(() => {
@@ -205,7 +213,7 @@ public class Win32ClipboardInjector {
         SendEnterKeybdEvent();
         Thread.Sleep(200);
 
-        // 2. Ctrl+L locks focus directly into the chat input box
+        // 2. Ctrl+L es el atajo salvador que te clava el cursor adentro de la caja de texto del chat.
         SendCtrlL();
         Thread.Sleep(250);
     }
@@ -301,7 +309,13 @@ public class Win32ClipboardInjector {
                 bestTitle = System.Text.RegularExpressions.Regex.Replace(bestTitle, @"[\r\n\t]+", " ");
             }
 
-            // Restore & Focus Main Window
+            // En Windows, un proceso en segundo plano NO puede robarse el foco alegremente:
+            // si llamas a SetForegroundWindow a secas, el icono de la barra de tareas parpadea en naranja y te ignora.
+            // Para forzar el foco real sin que el usuario tenga que hacer click:
+            // 1. Acoplamos nuestra cola de hilos a la ventana activa con AttachThreadInput.
+            // 2. Le metemos AllowSetForegroundWindow(ASFW_ANY).
+            // 3. Forzamos HWND_TOPMOST y de inmediato lo quitamos para traer la ventana al frente del escritorio.
+            // 4. Recién ahí SetForegroundWindow y SwitchToThisWindow toman el control real.
             IntPtr fgHwnd = GetForegroundWindow();
             uint dummy;
             uint fgThread = GetWindowThreadProcessId(fgHwnd, out dummy);

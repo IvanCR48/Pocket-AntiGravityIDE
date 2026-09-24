@@ -1,6 +1,5 @@
-/**
- * Use case: Queries working tree diffs, accepts hunks via IDE/Git, or rolls back changes.
- */
+// Caso de uso para revisar diffs desde el celular.
+// Esto maneja la lógica detrás del "Tinder para código": deslizar a la derecha para aceptar o a la izquierda para descartar.
 class ReviewChangesUseCase {
   constructor({ vcsPort, ideAutomationPort }) {
     this.vcs = vcsPort;
@@ -12,21 +11,22 @@ class ReviewChangesUseCase {
   }
 
   async acceptAll(workspaceRoot) {
-    // 1. Trigger IDE UI hunk accept
+    // 1. Disparamos el atajo de la IDE (Alt+Enter) para que Antigravity cierre sus barras flotantes de diff
     if (this.ideAutomation && typeof this.ideAutomation.acceptFocusedHunk === 'function') {
       try {
         await this.ideAutomation.acceptFocusedHunk();
       } catch (_) {}
     }
 
-    // 2. Stage changes in Git
+    // 2. Y de inmediato mandamos git add . para que el árbol de Git quede sincronizado de verdad
     return await this.vcs.acceptAll(workspaceRoot);
   }
 
   async acceptFile(workspaceRoot, filePath) {
-    // Note: Do not trigger IDE-wide acceptFocusedHunk here, as that sends Alt+Enter
-    // which globally accepts all pending files across the entire workspace in Antigravity IDE.
-    // Individual card acceptance strictly stages only the specific file via VCS.
+    // TRAMPA MORTAL: No llames a acceptFocusedHunk acá bajo ninguna circunstancia.
+    // En Antigravity, Alt+Enter es un botón nuclear que acepta TODOS los archivos pendientes
+    // del proyecto completo. Si el usuario deslizó una sola tarjeta en el celular,
+    // únicamente debemos pasarle git add al archivo puntual.
     return await this.vcs.acceptFile(workspaceRoot, filePath);
   }
 

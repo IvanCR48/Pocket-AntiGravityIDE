@@ -32,6 +32,8 @@ function getChatState(targetTitle = 'Antigravity IDE', processName = 'Antigravit
 
       try {
         const trimmed = (stdout || '').trim();
+        // PowerShell a veces escupe basura de perfiles, banners o advertencias antes del JSON.
+        // Si hacemos JSON.parse(stdout) directo, revienta; por eso buscamos el último bloque { ... }.
         const jsonMatch = trimmed.match(/\{.*\}$/s);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
