@@ -1,7 +1,4 @@
 <div align="center">
-
-  <img src="assets/banner.png" alt="Pocket Antigravity Demo" width="100%" style="border-radius: 8px;" />
-
   <br/><br/>
 
   <img src="assets/logo.png" alt="Pocket Antigravity Logo" width="100" height="100" style="border-radius: 50%;" />
